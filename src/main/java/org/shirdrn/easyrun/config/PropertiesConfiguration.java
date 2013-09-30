@@ -1,12 +1,10 @@
-package org.shirdrn.easyrun.utils;
+package org.shirdrn.easyrun.config;
 
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.ContextReadable;
-import org.shirdrn.easyrun.common.ContextWriteable;
 
 public final class PropertiesConfiguration implements ContextReadable, ContextWriteable {
 

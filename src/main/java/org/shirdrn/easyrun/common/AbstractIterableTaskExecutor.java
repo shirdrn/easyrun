@@ -1,17 +1,15 @@
 package org.shirdrn.easyrun.common;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.shirdrn.easyrun.config.Configuration;
 import org.shirdrn.easyrun.utils.TimeUtils;
 
-public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<ExecutionResult> implements LoopedSQLMaker {
+public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecutor<ExecutionResult> implements Iterable<E> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractIterableTaskExecutor.class);
 	protected final AtomicInteger totalCount = new AtomicInteger(0);
@@ -42,73 +40,62 @@ public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<
 	}
 	
 	@Override
-	public void doBody() {
-		String sql = makeParentSQL();
-		Statement stmt = null;
-		Connection conn = connectionPool.getConnection();
-		ResultSet rs = null;
+	public void doBody() throws Exception {
+		Iterator<E> iter = iterator();
 		try {
-			stmt = conn.createStatement();
-			rs = stmt.executeQuery(sql);
-			while(rs.next()) {
-				String[] childSqls = makeChildSQLs(rs);
-				if(childSqls != null && childSqls.length > 0) {
-					try {
-						if(childCaughtError && terminateWhenFailure) {
-							LOG.debug("childCaughtError=" + childCaughtError + ", terminateParentWhenChildFailure=" + terminateWhenFailure);
-							TaskExecutor<ChildTaskExecutionResult> child = getErrorChildTaskExecutor();
-							LOG.info("Child failed to execute: childResult=" + child.getResult());
-							throw new ChildTaskExecutionException(child.getResult());
-						}
-						fireChildSQLs(childSqls);
-						totalCount.incrementAndGet();
-					} catch (Exception e) {
-						LOG.debug(e);
-						throw e;
-					} finally {
-//						closeAll(null, stmt, null);
+			while(iter.hasNext()) {
+				try {
+					E element = iter.next();
+					if(childCaughtError && terminateWhenFailure) {
+						LOG.debug("childCaughtError=" + childCaughtError + ", terminateParentWhenChildFailure=" + terminateWhenFailure);
+						TaskExecutor<ChildTaskExecutionResult> child = getErrorChildTaskExecutor();
+						LOG.info("Child failed to execute: childResult=" + child.getResult());
+						throw new ChildTaskExecutionException(child.getResult());
 					}
-				} else {
-					LOG.warn("After invoke makeChildSQLs(): childSqls==null OR childSqls==[].");
+					startChildTaskExecutor(element);
+					totalCount.incrementAndGet();
+				} catch (Exception e) {
+					throw e;
 				}
 			}
 			status = Status.SUCCESS;
 		} catch (Exception e) {
-			executionResult.setCause(e);
 			status = Status.FAILURE;
-		} finally {
-//			closeAll(null, stmt, rs);
-			connectionPool.release(conn);
+			executionResult.setFailureCause(e);
+			throw e;
 		}
 	}
 	
-	protected abstract void fireChildSQLs(String[] childSqls) throws ChildTaskExecutionException;
-
-	private static final Log CELOG = LogFactory.getLog(ChildTaskExecutor.class);
+	protected abstract void startChildTaskExecutor(E element) throws ChildTaskExecutionException;
+	
+	/**
+	 * Process a element in child task executor.
+	 * @param element
+	 * @throws Exception
+	 */
+	protected abstract void process(E element) throws Exception;
+	
 	public class ChildTaskExecutor implements TaskExecutor<ChildTaskExecutionResult> {
 		
 		protected final int id;
-		protected final String[] childSQLs;
-		protected final Connection conn;
+		protected final E element;
 		protected final ChildTaskExecutionResult childResult;
+		protected int maxChildRetryTimes = 0;
 		private Date startTime;
 		private Date finishTime;
 		
-		public ChildTaskExecutor(String[] sqls) {
+		public ChildTaskExecutor(E element) {
 			super();
-			childSQLs = sqls;
+			this.element = element;
 			childResult = new ChildTaskExecutionResult();
-			childResult.setChildSQLExecutor(this);
-			childResult.setChildSQLs(sqls);
+			childResult.setChildTaskExecutor(this);
 			id = workerIdCounter.incrementAndGet();
 			childResult.setId(id);
-			conn = connectionPool.getConnection();
 		}
 		
 		@Override
 		public void configure(Configuration config) {
-			// TODO Auto-generated method stub
-			
+			maxChildRetryTimes = config.getRContext().getInt("common.child.failure.max.retry.times", maxChildRetryTimes);
 		}
 		
 		protected void beforeRun() {
@@ -131,7 +118,6 @@ public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<
 			childResult.setFinishWhen(TimeUtils.format(finishTime, DATE_FORMAT));
 			childResult.setTimeTaken(finishTime.getTime() - startTime.getTime());
 			childResult.setStatus(status);
-			connectionPool.release(conn);
 			logStat();
 			// record finished child worker
 			counter.incrementAndGet();
@@ -139,91 +125,74 @@ public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<
 
 		public void doChildBody() {
 			Exception result = null;
-			// execute the SQL statement
-			result = execute0();
+			// execute the task statement
+			result = executeChild();
 			if(result != null) {
-				status = Status.FAILURE;
 				// retry
 				int retryTimes = maxRetryTimes;
 				for (int i = retryTimes; i > 0; i--) {
-					result = execute0();
+					result = executeChild();
 					if(result != null) {
-						status = Status.FAILURE;
-						CELOG.debug("Retried to execute: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
+						LOG.debug("Child retried: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
 					} else {
-						status = Status.SUCCESS;
-						CELOG.debug("Retried to execute: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
+						LOG.debug("Child retried: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
 						break;
 					}
 				}
-			} else {
-				status = Status.SUCCESS;
 			}
 			// set caught exception
 			if(result != null) {
-				childResult.setCause(result);
+				status = Status.FAILURE;
+				childResult.setFailureCause(result);
+			} else {
+				status = Status.SUCCESS;
 			}
 		}
 		
-		private Exception execute0() {
+		private Exception executeChild() {
 			Exception result = null;
-			Statement stmt = null;
 			try {
-				stmt = conn.createStatement();
-//				executeBatchDML(stmt, childResult.getChildSQLs());
+				process(element);
 			} catch (Exception e) {
 				result = e;
-			} finally {
-				if(stmt != null) {
-					try {
-						stmt.close();
-					} catch (Exception e) {
-						result = e;
-					}
-				}
 			}
 			return result;
 		}
-		
+
 		public void logStat() {
 			StringBuffer log = new StringBuffer();
 			log.append("Finished child: ")
 			.append("name=" + name + ", ")
-			.append("sqlsId=" + childResult.getId() + ", ")
+			.append("id=" + childResult.getId() + ", ")
 			.append("status=" + childResult.getStatus() + ", ")
 			.append("start=" + childResult.getStartWhen() + ", ")
 			.append("finish=" + childResult.getFinishWhen() + ", ")
-			.append("timeTaken=" + childResult.getTimeTaken() + ", ")
-			.append("childSQLs=" + Arrays.asList(childResult.getChildSQLs()));
-			CELOG.info(log.toString());
+			.append("timeTaken=" + childResult.getTimeTaken());
+			LOG.info(log.toString());
 		}
 
+		public E getElement() {
+			return element;
+		}
+		
+		@Override
+		public ChildTaskExecutionResult getResult() {
+			return childResult;
+		}
+		
 		@Override
 		public String toString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append(getClass().getSimpleName())
-			.append("[id=").append(id).append(", ")
-			.append("childSQLs=").append(childSQLs).append("]");
+			.append("[id=").append(id);
 			return buf.toString();
-		}
-
-		@Override
-		public ChildTaskExecutionResult getResult() {
-			return childResult;
 		}
 
 	}
 	
 	public class ChildTaskExecutionResult extends DefaultExecutionResult {
-		private ChildTaskExecutor childSQLExecutor;
-		private String[] childSQLs;
+		private ChildTaskExecutor childTaskExecutor;
 		private int id;
-		public String[] getChildSQLs() {
-			return childSQLs;
-		}
-		public void setChildSQLs(String[] childSQLs) {
-			this.childSQLs = childSQLs;
-		}
 		public int getId() {
 			return id;
 		}
@@ -231,21 +200,20 @@ public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<
 			this.id = id;
 		}
 		public ChildTaskExecutor getChildTaskExecutor() {
-			return childSQLExecutor;
+			return childTaskExecutor;
 		}
-		public void setChildSQLExecutor(ChildTaskExecutor childSQLExecutor) {
-			this.childSQLExecutor = childSQLExecutor;
+		public void setChildTaskExecutor(ChildTaskExecutor childTaskExecutor) {
+			this.childTaskExecutor = childTaskExecutor;
 		}
 		@Override
 		public String toString() {
-			StringBuffer sb = new StringBuffer(super.toString());
-			sb.append(", childId=" + id + ", ")
-			.append("childSQLs=" + Arrays.asList(childSQLs));
+			StringBuffer sb = new StringBuffer();
+			sb.append("id=" + id + ", ").append(super.toString());
 			return sb.toString();
 		}
 	}
 	
-	public class ChildTaskExecutionException extends Exception {
+	public static class ChildTaskExecutionException extends Exception {
 
 		private static final long serialVersionUID = 3844442059837186731L;
 		private ExecutionResult childResult;
@@ -258,10 +226,6 @@ public abstract class AbstractIterableTaskExecutor extends AbstractTaskExecutor<
 			return childResult;
 		}
 		
-	}
-
-	public boolean isTerminateWhenChildFailure() {
-		return terminateWhenFailure;
 	}
 
 }

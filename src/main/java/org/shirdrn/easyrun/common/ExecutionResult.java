@@ -16,7 +16,7 @@ public interface ExecutionResult {
 	long getTimeTaken();
 	void setTimeTaken(long timeTaken);
 	
-	Exception getCause();
-	void setCause(Exception cause);
+	Exception getFailureCause();
+	void setFailureCause(Exception failureCause);
 	
 }

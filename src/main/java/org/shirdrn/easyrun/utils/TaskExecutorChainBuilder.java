@@ -5,8 +5,8 @@ import java.util.LinkedList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.Configuration;
 import org.shirdrn.easyrun.common.TaskExecutor;
+import org.shirdrn.easyrun.config.Configuration;
 
 public final class TaskExecutorChainBuilder {
 

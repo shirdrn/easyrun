@@ -1,5 +1,7 @@
 package org.shirdrn.easyrun.common;
 
+import org.shirdrn.easyrun.config.Configuration;
+
 public interface TaskExecutor<T> {
 	
 	void execute();

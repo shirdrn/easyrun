@@ -8,7 +8,7 @@ public class DefaultExecutionResult implements ExecutionResult {
 	private String startWhen;
 	private String finishWhen;
 	private long timeTaken;
-	private Exception cause;
+	private Exception failureCause;
 	
 	public Status getStatus() {
 		return status;
@@ -34,11 +34,11 @@ public class DefaultExecutionResult implements ExecutionResult {
 	public void setTimeTaken(long timeTaken) {
 		this.timeTaken = timeTaken;
 	}
-	public Exception getCause() {
-		return cause;
+	public Exception getFailureCause() {
+		return failureCause;
 	}
-	public void setCause(Exception cause) {
-		this.cause = cause;
+	public void setFailureCause(Exception failureCause) {
+		this.failureCause = failureCause;
 	}
 	@Override
 	public String toString() {
@@ -46,9 +46,9 @@ public class DefaultExecutionResult implements ExecutionResult {
 		sb.append("status=" + status + ", ")
 		.append("startWhen=" + startWhen + ", ")
 		.append("finishWhen=" + finishWhen + ", ")
-		.append("timeTaken=" + timeTaken + ", ");
-		if(cause != null) {
-			sb.append("cause=" + cause.getMessage());
+		.append("timeTaken=" + timeTaken);
+		if(failureCause != null) {
+			sb.append(", failureCause=" + failureCause.getClass().getName() + ": " + failureCause.getMessage());
 		}
 		return sb.toString();
 	}

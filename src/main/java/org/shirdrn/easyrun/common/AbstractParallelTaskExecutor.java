@@ -12,10 +12,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.component.threadpool.ThreadPoolFactory;
+import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.config.ContextReadable;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
 
-public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskExecutor {
+public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTaskExecutor<E> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractParallelTaskExecutor.class);
 	private ObjectFactory<ContextReadable, ThreadPoolService> threadPoolFactory;
@@ -23,7 +25,7 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 	
 	private long checkInterval = 500;
 	private BlockingQueue<Future<ChildTaskExecutionResult>> futureQ;
-	private ChildTaskExecutor errorChildExecutor;
+	private ChildTaskExecutor errorChildTaskExecutor;
 	private volatile boolean completed = false;
 	private final AtomicBoolean notified = new AtomicBoolean(false);
 	private Configuration config;
@@ -39,7 +41,11 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 		checkInterval = config.getRContext().getLong("component.thread.pool.future.queue.check.interval", 500);
 		threadPoolFactory = FactoryUtils.getFactory(ThreadPoolFactory.class);
 		int futureQSize = config.getRContext().getInt("component.thread.pool.future.queue.size", Integer.MAX_VALUE);
-		futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
+		if(futureQSize != Integer.MAX_VALUE) {
+			futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
+		} else {
+			futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>();
+		}
 	}
 	
 	protected ExecutorService getThreadPool() {
@@ -47,16 +53,16 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 	}
 
 	@Override
-	public void doBody() {
+	public void doBody() throws Exception {
 		// initialize future checker
 		final ChildExecutionChecker checker = new ChildExecutionChecker();
 		checker.setName("CHECKER");
 		checker.start();
 		// run body
 		super.doBody();
-		LOG.info("Set completed to true!");
 		completed = true;
-		// wait child SQL executor to finish executing
+		LOG.info("Set completed flag: completed=" + completed);
+		// wait child task executor to finish executing
 		synchronized(lock) {
 			try {
 				lock.wait();
@@ -67,17 +73,16 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 	
 	@Override
 	protected ChildTaskExecutor getErrorChildTaskExecutor() {
-		return errorChildExecutor;
+		return errorChildTaskExecutor;
 	}
 
-	private static final Log CKLOG = LogFactory.getLog(ChildExecutionChecker.class);
 	final class ChildExecutionChecker extends Thread {
 		@Override
 		public void run() {
 			while(!completed) {
-				CKLOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
+				LOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
 				try {
-					CKLOG.debug("Check future queue: size=" + futureQ.size());
+					LOG.debug("Check future queue: size=" + futureQ.size());
 					Iterator<Future<ChildTaskExecutionResult>> iter = futureQ.iterator();
 					while(iter.hasNext()) {
 						Future<ChildTaskExecutionResult> f = iter.next();
@@ -85,21 +90,29 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 						if(status == Status.SUCCESS) {
 							iter.remove();
 						} else if(status == Status.FAILURE) {
-							CKLOG.info("Child SQL executor failure: childResult=" + f.get());
-							executionResult.setCause(f.get().getCause());
-							errorChildExecutor = f.get().getChildTaskExecutor();
+							String message = "childResult=[" + f.get() + "]";
+							if(terminateWhenFailure) {
+								LOG.error("Child task failure:" + message);
+							}
+							executionResult.setFailureCause(f.get().getFailureCause());
+							errorChildTaskExecutor = f.get().getChildTaskExecutor();
 							childCaughtError = true;
 							// cancel all submitted already running tasks
-							if(isTerminateWhenChildFailure()) {
+							if(terminateWhenFailure) {
+								LOG.error("Child task error, cancel all: ");
 								completed = true;
 								cancelAll();
+								notifyParentExit();
+								break;
+							} else {
+								LOG.warn("Child task failure, ignore it: " + message + ".");
+								iter.remove();
+								continue;
 							}
-							CKLOG.info("Child error: completed=" + completed + ", childCaughtError=" + childCaughtError + ",");
-							break;
 						}
 					}
 				} catch (Exception e) {
-					CKLOG.warn("Check future queue: ", e);
+					LOG.warn("Check future queue: ", e);
 				} finally {
 					try {
 						Thread.sleep(checkInterval);
@@ -114,9 +127,9 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 			Iterator<Future<ChildTaskExecutionResult>> iter = futureQ.iterator();
 			while(iter.hasNext()) {
 				Future<ChildTaskExecutionResult> f = iter.next();
-				boolean cancelled = f.cancel(true);
 				try {
-					CKLOG.info("Cancel child task: name=" + f.get().getChildTaskExecutor().getClass().getSimpleName() + ", id=" + f.get().getId() + ", cancelled=" + cancelled);
+					f.cancel(true);
+					LOG.info("Attempt to cancel child task: id=" + f.get().getId() + ", name=" + f.get().getChildTaskExecutor().getClass().getSimpleName());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (ExecutionException e) {
@@ -127,23 +140,20 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 	}
 	
 	@Override
-	protected void fireChildSQLs(String[] childSqls) throws ChildTaskExecutionException {
-		InsertionWorker worker = new InsertionWorker(childSqls);
+	protected void startChildTaskExecutor(E element) throws ChildTaskExecutionException {
+		Worker worker = new Worker(element);
 		Future<ChildTaskExecutionResult> future = getThreadPool().submit(worker);
 		LOG.debug("Submit a child task: worker=" + worker);
 		try {
 			futureQ.put(future);
 			LOG.debug("Put a future to futureQ: " + future);
-		} catch (InterruptedException e) {
-		}
+		} catch (InterruptedException e) {}
 	}
-	
-	
-	private static final Log IWLOG = LogFactory.getLog(InsertionWorker.class);
-	class InsertionWorker extends ChildTaskExecutor implements Callable<ChildTaskExecutionResult> {
 
-		public InsertionWorker(String[] sqls) {
-			super(sqls);
+	class Worker extends ChildTaskExecutor implements Callable<ChildTaskExecutionResult> {
+
+		public Worker(E element) {
+			super(element);
 		}
 
 		@Override
@@ -152,11 +162,11 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 				super.execute();
 			} catch (Exception e) {
 				if(!(e instanceof InterruptedException)) {
-					if(childResult.getCause() == null) {
-						childResult.setCause(e);
+					if(childResult.getFailureCause() == null) {
+						childResult.setFailureCause(e);
 					}
 				} else {
-					IWLOG.info("Interrupted, and exit.");
+					LOG.info("Interrupted, and exit.");
 				}
 			}
 			return childResult;
@@ -165,26 +175,20 @@ public abstract class AbstractParallelTaskExecutor extends AbstractIterableTaskE
 		@Override
 		protected void afterRun() {
 			super.afterRun();
-			IWLOG.debug("Counter: counter=" + counter.get() + ", totalCount=" + totalCount.get() + ", completed=" + completed);
+			LOG.debug("Counter: counter=" + counter.get() + ", totalCount=" + totalCount.get() + ", completed=" + completed);
 			if(completed) {
-				// abnormally exit
-				if(childCaughtError && isTerminateWhenChildFailure()) {
-					notifyParent();
-					return;
-				}
 				// permit to execute regardless of child errors
 				if(counter.get() == totalCount.get()) {
-					notifyParent();
+					notifyParentExit();
 				}
 			}
 		}
 
-
 	}
 	
-	private void notifyParent() {
+	private void notifyParentExit() {
 		if(notified.compareAndSet(false, true)) {
-			LOG.info("Notify parent.");
+			LOG.info("Notify parent to exit.");
 			synchronized(lock) {
 				lock.notify();
 			}
