@@ -3,7 +3,7 @@ package org.shirdrn.easyrun.common;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.config.Configuration;
-import org.shirdrn.easyrun.config.PropertiesConfiguration;
+import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestAbstractSimpleTaskLExecutor {
 
@@ -23,8 +23,7 @@ public class TestAbstractSimpleTaskLExecutor {
 	
 	@Before
 	public void initialize() {
-		config = new Configuration(
-				new PropertiesConfiguration("config.properties"));
+		config = FactoryUtils.getDefaultConfiguration();
 		executor = new MySimpleTaskExecutor();
 	}
 	

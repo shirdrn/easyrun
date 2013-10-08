@@ -13,8 +13,8 @@ public abstract class AbstractSimpleTaskLExecutor extends AbstractTaskExecutor<D
 	public void execute() {
 		super.execute();
 		// set execution result
-		executionResult.setStartWhen(TimeUtils.format(startWhen, DATE_FORMAT));
-		executionResult.setFinishWhen(TimeUtils.format(finishWhen, DATE_FORMAT));
+		executionResult.setStartWhen(TimeUtils.format(startWhen, statDateFormat));
+		executionResult.setFinishWhen(TimeUtils.format(finishWhen, statDateFormat));
 		executionResult.setTimeTaken(timeTaken);
 		executionResult.setStatus(status);
 	}

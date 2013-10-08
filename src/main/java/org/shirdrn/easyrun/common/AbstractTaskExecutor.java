@@ -11,7 +11,7 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractTaskExecutor.class);
 	protected String name;
-	protected static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	protected String statDateFormat = "yyyyMMddHHmmss";
 	protected Status status = Status.UNKNOWN;
 	protected ConnectionPool connectionPool;
 	protected int maxRetryTimes = 0;
@@ -28,10 +28,9 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	@Override
 	public void configure(Configuration config) {
 		name = getName();
-		terminateWhenFailure = config.getRContext().getBoolean(
-				"common.terminate.when.failure", true);
-		maxRetryTimes = config.getRContext().getInt(
-				"common.failure.max.retry.times", maxRetryTimes);
+		terminateWhenFailure = config.getRContext().getBoolean("common.terminate.when.failure", true);
+		maxRetryTimes = config.getRContext().getInt("common.failure.max.retry.times", maxRetryTimes);
+		statDateFormat = config.getRContext().get("common.stat.date.format", "yyyyMMddHHmmss");
 		
 //		String connectionPoolClass = config.getRContext().get(
 //				"component.connection.pool.class", 

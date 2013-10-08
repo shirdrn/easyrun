@@ -39,7 +39,8 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		super.configure(config);
 		this.config = config;
 		checkInterval = config.getRContext().getLong("component.thread.pool.future.queue.check.interval", 500);
-		threadPoolFactory = FactoryUtils.getFactory(ThreadPoolFactory.class);
+		String poolClazz = config.getRContext().get("component.thread.pool.class", "org.shirdrn.easyrun.component.threadpool.ThreadPoolFactory");
+		threadPoolFactory = FactoryUtils.getFactory(poolClazz, ThreadPoolFactory.class);
 		int futureQSize = config.getRContext().getInt("component.thread.pool.future.queue.size", Integer.MAX_VALUE);
 		if(futureQSize != Integer.MAX_VALUE) {
 			futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);

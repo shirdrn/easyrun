@@ -11,7 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.config.Configuration;
-import org.shirdrn.easyrun.config.PropertiesConfiguration;
+import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestAbstractParallelTaskExecutor {
 
@@ -27,8 +27,7 @@ public class TestAbstractParallelTaskExecutor {
 	
 	@Before
 	public void initialize() {
-		config = new Configuration(
-				new PropertiesConfiguration("config.properties"));
+		config = FactoryUtils.getDefaultConfiguration();
 	}
 	
 	@Test

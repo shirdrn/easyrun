@@ -33,8 +33,8 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 	public void execute() {
 		super.execute();
 		// set execution result
-		executionResult.setStartWhen(TimeUtils.format(startWhen, DATE_FORMAT));
-		executionResult.setFinishWhen(TimeUtils.format(finishWhen, DATE_FORMAT));
+		executionResult.setStartWhen(TimeUtils.format(startWhen, statDateFormat));
+		executionResult.setFinishWhen(TimeUtils.format(finishWhen, statDateFormat));
 		executionResult.setTimeTaken(timeTaken);
 		executionResult.setStatus(status);
 	}
@@ -100,7 +100,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 		
 		protected void beforeRun() {
 			startTime = new Date();
-			childResult.setStartWhen(TimeUtils.format(startTime, DATE_FORMAT));
+			childResult.setStartWhen(TimeUtils.format(startTime, statDateFormat));
 		}
 		
 		@Override
@@ -115,7 +115,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 		
 		protected void afterRun() {
 			finishTime = new Date();
-			childResult.setFinishWhen(TimeUtils.format(finishTime, DATE_FORMAT));
+			childResult.setFinishWhen(TimeUtils.format(finishTime, statDateFormat));
 			childResult.setTimeTaken(finishTime.getTime() - startTime.getTime());
 			childResult.setStatus(status);
 			logStat();
