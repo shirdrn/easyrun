@@ -70,6 +70,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 			} catch (InterruptedException e) {
 			}
 		}
+		LOG.debug("Exit method doBody().");
 	}
 	
 	@Override
@@ -77,13 +78,14 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		return errorChildTaskExecutor;
 	}
 
+	private final Log CKLOG = LogFactory.getLog(ChildExecutionChecker.class);
 	final class ChildExecutionChecker extends Thread {
 		@Override
 		public void run() {
 			while(!completed) {
-				LOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
+				CKLOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
 				try {
-					LOG.debug("Check future queue: size=" + futureQ.size());
+					CKLOG.debug("Check future queue: size=" + futureQ.size());
 					Iterator<Future<ChildTaskExecutionResult>> iter = futureQ.iterator();
 					while(iter.hasNext()) {
 						Future<ChildTaskExecutionResult> f = iter.next();
@@ -93,27 +95,28 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 						} else if(status == Status.FAILURE) {
 							String message = "childResult=[" + f.get() + "]";
 							if(terminateWhenFailure) {
-								LOG.error("Child task failure:" + message);
+								CKLOG.error("Child task failure:" + message);
 							}
 							executionResult.setFailureCause(f.get().getFailureCause());
 							errorChildTaskExecutor = f.get().getChildTaskExecutor();
 							childCaughtError = true;
 							// cancel all submitted already running tasks
 							if(terminateWhenFailure) {
-								LOG.error("Child task error, cancel all: ");
+								CKLOG.error("Child task error, cancel all: ");
 								completed = true;
 								cancelAll();
 								notifyParentExit();
+								CKLOG.debug("Child execution checker exit.");
 								break;
 							} else {
-								LOG.warn("Child task failure, ignore it: " + message + ".");
+								CKLOG.warn("Child task failure, ignore it: " + message + ".");
 								iter.remove();
 								continue;
 							}
 						}
 					}
 				} catch (Exception e) {
-					LOG.warn("Check future queue: ", e);
+					CKLOG.warn("Check future queue: ", e);
 				} finally {
 					try {
 						Thread.sleep(checkInterval);
@@ -130,7 +133,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 				Future<ChildTaskExecutionResult> f = iter.next();
 				try {
 					f.cancel(true);
-					LOG.info("Attempt to cancel child task: id=" + f.get().getId() + ", name=" + f.get().getChildTaskExecutor().getClass().getSimpleName());
+					CKLOG.info("Attempt to cancel child task: id=" + f.get().getId() + ", name=" + f.get().getChildTaskExecutor().getClass().getSimpleName());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (ExecutionException e) {

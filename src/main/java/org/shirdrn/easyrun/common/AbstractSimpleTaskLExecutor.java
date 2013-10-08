@@ -2,7 +2,7 @@ package org.shirdrn.easyrun.common;
 
 import org.shirdrn.easyrun.utils.TimeUtils;
 
-public abstract class AbstractSimpleTaskLExecutor extends AbstractTaskExecutor<DefaultExecutionResult> {
+public abstract class AbstractSimpleTaskLExecutor extends AbstractTaskExecutor<ExecutionResult> {
 
 	public AbstractSimpleTaskLExecutor() {
 		super();

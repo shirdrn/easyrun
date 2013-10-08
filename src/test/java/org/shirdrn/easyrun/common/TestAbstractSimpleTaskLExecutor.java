@@ -10,17 +10,6 @@ public class TestAbstractSimpleTaskLExecutor {
 	TaskExecutor<? extends ExecutionResult> executor;
 	Configuration config;
 	
-	class MySimpleTaskExecutor extends AbstractSimpleTaskLExecutor {
-
-		@Override
-		protected void doBody() throws Exception {
-			for(int i=0; i<10; i++) {
-				System.out.println("print " + i);
-			}
-		}
-		
-	}
-	
 	@Before
 	public void initialize() {
 		config = FactoryUtils.getDefaultConfiguration();
