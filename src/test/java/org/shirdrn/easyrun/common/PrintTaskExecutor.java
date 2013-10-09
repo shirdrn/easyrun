@@ -33,6 +33,6 @@ public class PrintTaskExecutor extends AbstractParallelTaskExecutor<Entry<Intege
 
 	@Override
 	protected void process(Entry<Integer, List<String>> element) throws Exception {
-		LOG.info("Print: " + element.getKey() + ". " + element.getValue().toString());			
+		LOG.info("Print: " + element.getKey() + " => " + element.getValue().toString());			
 	}
 }

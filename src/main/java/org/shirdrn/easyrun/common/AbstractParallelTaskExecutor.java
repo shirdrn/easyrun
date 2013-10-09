@@ -41,11 +41,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		String poolClazz = config.getRContext().get("component.thread.pool.class", "org.shirdrn.easyrun.component.threadpool.ThreadPoolFactory");
 		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(poolClazz);
 		int futureQSize = config.getRContext().getInt("component.thread.pool.future.queue.size", Integer.MAX_VALUE);
-		if(futureQSize != Integer.MAX_VALUE) {
-			futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
-		} else {
-			futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>();
-		}
+		futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
 	}
 	
 	protected ThreadPoolService getThreadPool() {
@@ -58,6 +54,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		LOG.info("Try to start child execution checker thread...");
 		final ChildExecutionChecker checker = new ChildExecutionChecker();
 		checker.setName("CHECKER");
+		checker.setDaemon(true);
 		checker.start();
 		LOG.info("Child execution checker started!");
 		// run body
@@ -69,8 +66,9 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 			try {
 				lock.wait();
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			} finally {
-				LOG.info("Received notification, and continue...");
+				LOG.info("Received notification, then continue...");
 			}
 		}
 		// close thread pool
@@ -127,22 +125,28 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 								}
 							}
 						}
+					} else {
+						// futureQ is empty
+						Thread.sleep(checkInterval);
 					}
 				} catch (Exception e) {
 					CKLOG.warn("Check future queue: ", e);
 				} finally {
 					try {
-						Thread.sleep(checkInterval);
+						// error caught
+						if(childCaughtError) {
+							while(true) {
+								if(completed && terminateWhenFailure) {
+									break;
+								}
+								Thread.sleep(checkInterval);
+							}
+							notifyParent();
+							CKLOG.info("Child task execution checker prepare to exit...");
+						}
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-				}
-				
-				// error caught
-				if(childCaughtError && completed && terminateWhenFailure) {
-					notifyParent();
-					CKLOG.info("Child task execution checker prepare to exit...");
-					running = false;
 				}
 			}
 			CKLOG.info("Finished to run child execution checker thread.");
@@ -170,7 +174,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		if(!childCaughtError 
 				|| (childCaughtError && !terminateWhenFailure)) {
 			Future<ChildTaskExecutionResult> future = getThreadPool().submit(worker);
-			LOG.info("Submit a child task: worker=" + worker);
+			LOG.debug("Submit a child task: worker=" + worker);
 			try {
 				futureQ.put(future);
 				LOG.debug("Put a future to futureQ: " + future);

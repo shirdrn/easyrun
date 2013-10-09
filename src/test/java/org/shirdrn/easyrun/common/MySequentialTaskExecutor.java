@@ -5,8 +5,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class MySequentialTaskExecutor extends AbstractSequentialTaskExecutor<Entry<Integer,List<String>>> {
 
+	private static final Log LOG = LogFactory.getLog(MySequentialTaskExecutor.class);
+	
 	@Override
 	public Iterator<Entry<Integer,List<String>>> iterator() {
 		MyKeyValuePairs pairs = new MyKeyValuePairs();
@@ -20,7 +25,7 @@ public class MySequentialTaskExecutor extends AbstractSequentialTaskExecutor<Ent
 
 	@Override
 	protected void process(Entry<Integer, List<String>> element) throws Exception {
-		System.out.println(element.getKey() + ". " + element.getValue().toString());			
+		LOG.info(element.getKey() + " => " + element.getValue().toString());			
 	}
 
 }
