@@ -1,4 +1,4 @@
-package org.shirdrn.easyrun.component.connpool;
+package org.shirdrn.easyrun.component.connectionpool;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -6,11 +6,11 @@ import java.sql.SQLException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.ConnectionPool;
+import org.shirdrn.easyrun.common.ConnectionPoolService;
 import org.shirdrn.easyrun.config.ContextReadable;
 import org.shirdrn.easyrun.config.PropertiesConfiguration;
 
-public final class JDBCConnectionPool implements ConnectionPool {
+public final class JDBCConnectionPool implements ConnectionPoolService {
 	
 	private static final Log LOG = LogFactory.getLog(JDBCConnectionPool.class);
 	private static String JDBC_PROPERTIES = "jdbc.properties";
