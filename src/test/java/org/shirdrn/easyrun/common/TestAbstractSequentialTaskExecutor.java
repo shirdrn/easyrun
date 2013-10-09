@@ -1,5 +1,7 @@
 package org.shirdrn.easyrun.common;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.config.Configuration;
@@ -7,6 +9,7 @@ import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestAbstractSequentialTaskExecutor {
 
+	private static final Log LOG = LogFactory.getLog(TestAbstractSequentialTaskExecutor.class);
 	TaskExecutor<? extends ExecutionResult> executor;
 	Configuration config;
 	
@@ -21,7 +24,7 @@ public class TestAbstractSequentialTaskExecutor {
 		executor.configure(config);
 		executor.execute();
 		ExecutionResult result = executor.getResult();
-		System.out.println(result.toString());
+		LOG.info(result.toString());
 	}
 	
 
