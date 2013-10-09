@@ -1,16 +1,20 @@
-package org.shirdrn.easyrun.utils;
+package org.shirdrn.easyrun.config;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.common.MySequentialTaskExecutor;
 import org.shirdrn.easyrun.common.MySimpleTaskExecutor;
 import org.shirdrn.easyrun.common.PrintTaskExecutor;
 import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.config.DefaultTaskExecutorChainBuilder;
+import org.shirdrn.easyrun.config.TaskExecutorChainBuilder;
+import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestDefaultTaskExecutorChainBuilder {
 
 	Configuration configuration;
-	DefaultTaskExecutorChainBuilder builder;
+	TaskExecutorChainBuilder builder;
 	
 	@Before
 	public void intialize() {
@@ -21,10 +25,15 @@ public class TestDefaultTaskExecutorChainBuilder {
 	@Test
 	public void fireChain() {
 		builder
-		.chain(MySequentialTaskExecutor.class).terminateWhenFailure()
-		.chain(MySimpleTaskExecutor.class).terminateWhenFailure()
-		.chain(PrintTaskExecutor.class).terminateWhenFailure()
+		.chain(MySequentialTaskExecutor.class)
+		.chain(MySimpleTaskExecutor.class)
+		.chain(PrintTaskExecutor.class)
 		.fireChain();
+	}
+	
+	@After
+	public void destroy() {
+		FactoryUtils.closeAll();
 	}
 	
 	

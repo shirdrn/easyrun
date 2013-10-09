@@ -1,4 +1,4 @@
-package org.shirdrn.easyrun.utils;
+package org.shirdrn.easyrun.config;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -8,9 +8,9 @@ import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.ExecutionResult;
 import org.shirdrn.easyrun.common.TaskExecutor;
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.utils.ReflectionUtils;
 
-public class DefaultTaskExecutorChainBuilder {
+public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder {
 
 	private static final Log LOG = LogFactory.getLog(DefaultTaskExecutorChainBuilder.class);
 	private final LinkedHashMap<TaskExecutor<ExecutionResult>, TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>>> builders = 
@@ -27,12 +27,14 @@ public class DefaultTaskExecutorChainBuilder {
 		this.configuration = configuration;
 	}
 	
-	public TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>> chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass) {
+	@Override
+	public TaskExecutorChainBuilder chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass) {
 		return chain(executorClass, new Object[] {});
 	}
 	
+	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>> chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass, Object... parameters) {
+	public TaskExecutorChainBuilder chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass, Object... parameters) {
 		TaskExecutor<ExecutionResult> instance = null;
 		if(parameters != null) {
 			instance = ReflectionUtils.getInstance(executorClass, parameters);
@@ -43,9 +45,10 @@ public class DefaultTaskExecutorChainBuilder {
 		builders.put(instance, currentBuidler);
 		execChain.addLast(instance);
 		classes.put(executorClass, instance);
-		return currentBuidler;
+		return this;
 	}
 	
+	@Override
 	public void fireChain() {
 		for(TaskExecutor<ExecutionResult> executor : execChain) {
 			LOG.info("Execute task: executor=" + executor.getClass().getName());
@@ -62,14 +65,17 @@ public class DefaultTaskExecutorChainBuilder {
 		}
 	}
 	
+	@Override
 	public TaskExecutor<ExecutionResult> getFirst() {
 		return execChain.getFirst();
 	}
 	
+	@Override
 	public TaskExecutor<ExecutionResult> getLast() {
 		return execChain.getLast();
 	}
 	
+	@Override
 	public ExecutionResult getResult(Class<? extends TaskExecutor<ExecutionResult>> executorClass) {
 		ExecutionResult result = null;
 		TaskExecutor<ExecutionResult> instance = classes.get(executorClass);
@@ -77,6 +83,26 @@ public class DefaultTaskExecutorChainBuilder {
 			result = resultMap.get(instance);
 		}
 		return result;
+	}
+	
+	@Override
+	public TaskExecutorChainBuilder terminateWhenFailure() {
+		return currentBuidler.terminateWhenFailure();
+	}
+
+	@Override
+	public TaskExecutorChainBuilder terminateWhenFailure(boolean terminate) {
+		return currentBuidler.terminateWhenFailure(terminate);
+	}
+
+	@Override
+	public boolean isTerminateWhenFailure() {
+		return currentBuidler.isTerminateWhenFailure();
+	}
+
+	@Override
+	public TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>> getCurrentTaskExecutorBuilder() {
+		return currentBuidler;
 	}
 	
 	public class TaskExecutorBuilder<T extends TaskExecutor<ExecutionResult>>  {
@@ -116,5 +142,5 @@ public class DefaultTaskExecutorChainBuilder {
 		}
 		
 	}
-	
+
 }
