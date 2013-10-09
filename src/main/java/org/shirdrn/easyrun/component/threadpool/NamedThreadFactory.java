@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DefaultThreadFactory implements ThreadFactory {
+public class NamedThreadFactory implements ThreadFactory {
 
 	static final AtomicInteger poolNumber = new AtomicInteger(1);
 	final ThreadGroup group;
@@ -12,7 +12,7 @@ public class DefaultThreadFactory implements ThreadFactory {
 	private String poolName = "POOL";
 	private DecimalFormat formatter = new DecimalFormat("000");
 
-	public DefaultThreadFactory(String poolName) {
+	public NamedThreadFactory(String poolName) {
 		if(poolName != null && !poolName.trim().isEmpty()) {
 			this.poolName = poolName;
 		}
@@ -20,7 +20,7 @@ public class DefaultThreadFactory implements ThreadFactory {
 		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
 	}
 
-	public DefaultThreadFactory() {
+	public NamedThreadFactory() {
 		this("POOL");
 	}
 

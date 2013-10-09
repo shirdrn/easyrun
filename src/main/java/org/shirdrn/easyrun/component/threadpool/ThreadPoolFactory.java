@@ -1,5 +1,7 @@
 package org.shirdrn.easyrun.component.threadpool;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +21,7 @@ public class ThreadPoolFactory extends AbstractObjectFactory<ContextReadable, Th
 			int workQSize = 2 * nThreads;
 			BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(workQSize);
 			pool = new ManagedThreadPool(nThreads, nThreads,
-					0L, TimeUnit.MILLISECONDS, q, new DefaultThreadFactory(name), 
+					0L, TimeUnit.MILLISECONDS, q, new NamedThreadFactory(name), 
 					new ScheduleAgainPolicy(workQSize));
 			cache.put(key, pool);
 		}
@@ -27,8 +29,21 @@ public class ThreadPoolFactory extends AbstractObjectFactory<ContextReadable, Th
 	}
 
 	@Override
+	public void closeAll() {
+		Iterator<Entry<ContextReadable, ThreadPoolService>> iter = cache.entrySet().iterator();
+		while(iter.hasNext()) {
+			ThreadPoolService pool = iter.next().getValue();
+			if(!pool.isShutdown()) {
+				pool.shutdown();
+			}
+		}	
+	}
+
+	@Override
 	public void close(ThreadPoolService value) {
-		value.shutdown();		
+		if(!value.isShutdown()) {
+			value.shutdown();
+		}
 	}
 	
 }
