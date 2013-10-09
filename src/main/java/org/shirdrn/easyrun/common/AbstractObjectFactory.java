@@ -16,17 +16,32 @@ public abstract class AbstractObjectFactory<K, V extends Closeable> implements O
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				Iterator<Entry<K, V>> iter = 
-						cache.entrySet().iterator();
-				while(iter.hasNext()) {
-					try {
-						iter.next().getValue().close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
+				closeAll();
 			}
 		});
+	}
+
+	@Override
+	public void closeAll() {
+		Iterator<Entry<K, V>> iter = 
+				cache.entrySet().iterator();
+		while(iter.hasNext()) {
+			try {
+				iter.next().getValue().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}		
+	}
+
+	@Override
+	public int count() {
+		return cache.size();
+	}
+
+	@Override
+	public Iterator<Entry<K, V>> iterator() {
+		return cache.entrySet().iterator();
 	}
 
 }

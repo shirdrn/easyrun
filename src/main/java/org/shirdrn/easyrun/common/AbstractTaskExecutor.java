@@ -13,7 +13,6 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	protected String name;
 	protected String statDateFormat = "yyyyMMddHHmmss";
 	protected Status status = Status.UNKNOWN;
-	protected ConnectionPool connectionPool;
 	protected int maxRetryTimes = 0;
 	protected boolean terminateWhenFailure;
 	protected T executionResult;
@@ -31,11 +30,6 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 		terminateWhenFailure = config.getRContext().getBoolean("common.terminate.when.failure", true);
 		maxRetryTimes = config.getRContext().getInt("common.failure.max.retry.times", maxRetryTimes);
 		statDateFormat = config.getRContext().get("common.stat.date.format", "yyyyMMddHHmmss");
-		
-//		String connectionPoolClass = config.getRContext().get(
-//				"component.connection.pool.class", 
-//				"org.shirdrn.easyrun.component.connpool.JDBCConnectionPool");
-//		connectionPool = FactoryUtils.getFactory(ConnectionPoolFactory.class).get(connectionPoolClass);
 	}
 	
 	@Override

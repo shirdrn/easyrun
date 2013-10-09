@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.config.Configuration;
@@ -73,5 +74,9 @@ public class TestAbstractParallelTaskExecutor {
 		return executor;
 	}
 	
+	@After
+	public void destroy() {
+		FactoryUtils.closeAll();
+	}
 
 }
