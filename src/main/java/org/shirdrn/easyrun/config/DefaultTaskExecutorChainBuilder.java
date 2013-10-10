@@ -29,7 +29,7 @@ public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder
 	
 	@Override
 	public TaskExecutorChainBuilder chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass) {
-		return chain(executorClass, new Object[] {});
+		return chain(executorClass, (Object[]) null);
 	}
 	
 	@Override
@@ -57,10 +57,12 @@ public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder
 			LOG.info("Done: result=" + executor.getResult());
 			resultMap.put(executor, executor.getResult());
 			TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>> builder = builders.get(executor);
-			if((executor.getResult() == null || executor.getResult().getStatus() != Status.SUCCESS) 
-					&& builder.isTerminateWhenFailure()) {
-				LOG.info("Terminate task: " + builder.getTaskExecutor().getClass().getName());
-				break;
+			if((executor.getResult() == null 
+					|| executor.getResult().getStatus() != Status.SUCCESS)) {
+				if(executor.isTerminateWhenFailure()) {
+					LOG.info("Terminate task: " + builder.getTaskExecutor().getClass().getName());
+					break;
+				}
 			}
 		}
 	}
@@ -96,16 +98,23 @@ public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder
 	}
 
 	@Override
-	public boolean isTerminateWhenFailure() {
-		return currentBuidler.isTerminateWhenFailure();
-	}
-
-	@Override
 	public TaskExecutorBuilder<? extends TaskExecutor<ExecutionResult>> getCurrentTaskExecutorBuilder() {
 		return currentBuidler;
 	}
 	
-	public class TaskExecutorBuilder<T extends TaskExecutor<ExecutionResult>>  {
+	@Override
+	public boolean isTerminateWhenFailure() {
+		return currentBuidler.isTerminateWhenFailure();
+	}
+	
+	@Override
+	public void setTerminateWhenFailure(boolean terminateWhenFailure) {
+		currentBuidler.setTerminateWhenFailure(terminateWhenFailure);		
+	}
+	
+	
+	
+	public class TaskExecutorBuilder<T extends TaskExecutor<ExecutionResult>> implements TaskExecutorConfigurable  {
 		
 		private DefaultTaskExecutorChainBuilder chainBuilder;
 		private T TaskExecutor;
@@ -124,21 +133,23 @@ public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder
 			return TaskExecutor;
 		}
 
-		protected boolean isTerminateWhenFailure() {
-			return terminateWhenFailure;
-		}
-
-		protected void setTerminateWhenFailure(boolean terminateWhenFailure) {
-			this.terminateWhenFailure = terminateWhenFailure;
-		}
-		
 		public DefaultTaskExecutorChainBuilder terminateWhenFailure() {
 			return terminateWhenFailure(true);
 		}
 		
 		public DefaultTaskExecutorChainBuilder terminateWhenFailure(boolean terminate) {
-			currentBuidler.setTerminateWhenFailure(terminate);
+			currentBuidler.getTaskExecutor().setTerminateWhenFailure(terminate);
 			return chainBuilder;
+		}
+		
+		@Override
+		public boolean isTerminateWhenFailure() {
+			return terminateWhenFailure;
+		}
+
+		@Override
+		public void setTerminateWhenFailure(boolean terminateWhenFailure) {
+			this.terminateWhenFailure = terminateWhenFailure;
 		}
 		
 	}
