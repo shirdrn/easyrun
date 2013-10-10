@@ -1,8 +1,10 @@
 package org.shirdrn.easyrun.utils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -15,6 +17,7 @@ import org.shirdrn.easyrun.config.PropertiesConfiguration;
 public class FactoryUtils {
 
 	private final static Map<String, ObjectFactory<?, ?>> INSTANCES = new HashMap<String, ObjectFactory<?, ?>>(0);
+	private final static Map<Class<?>, Set<String>> CLASSES = new HashMap<Class<?>, Set<String>>(0);
 	private static Lock lock = new ReentrantLock();
 	private static Configuration CONFIGURATION = null;
 	static {
@@ -27,18 +30,34 @@ public class FactoryUtils {
 		}
 	}
 
-	public static ObjectFactory<?, ?> getFactory(String className) {
-		ObjectFactory<?, ?> instance = (ObjectFactory<?, ?>) INSTANCES.get(className);
+	@SuppressWarnings("unchecked")
+	public static <T> T getFactory(String className, Class<T> baseClazz) {
+		register(baseClazz, className);
+		return (T) INSTANCES.get(className);
+	}
+	
+	private static <T> void register(Class<T> baseClazz, String className) {
+		Set<String> cachedClasses = CLASSES.get(baseClazz);
 		lock.lock();
 		try {
-			if(instance == null) {
-				instance = (ObjectFactory<?, ?>) ReflectionUtils.getInstance(className);
+			if(cachedClasses == null) {
+				cachedClasses = new HashSet<String>();
+				T instance = ReflectionUtils.getInstance(className, baseClazz, null);
+				cachedClasses.add(className);
+				CLASSES.put(baseClazz, cachedClasses);
 				INSTANCES.put(className, (ObjectFactory<?, ?>) instance);
+			} else {
+				if(!cachedClasses.contains(className)) {
+					cachedClasses.add(className);
+					if(!INSTANCES.containsKey(className)) {
+						T instance = ReflectionUtils.getInstance(className, baseClazz, null);
+						INSTANCES.put(className, (ObjectFactory<?, ?>) instance);
+					}
+				}
 			}
 		} finally {
 			lock.unlock();
 		}
-		return instance;
 	}
 	
 	public static Configuration getDefaultConfiguration() {
