@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.shirdrn.easyrun.common.ObjectFactory;
+import org.shirdrn.easyrun.common.ThreadPoolFactory;
 import org.shirdrn.easyrun.common.ThreadPoolService;
 import org.shirdrn.easyrun.config.Configuration;
 import org.shirdrn.easyrun.config.ContextReadable;
@@ -24,13 +25,12 @@ public class TestThreadPoolFactory {
 	ObjectFactory<ContextReadable, ThreadPoolService> threadPoolFactory;
 	ThreadPoolService threadPoolService;
 	
-	@SuppressWarnings("unchecked")
 	@Before
 	public void initialize() {
 		// create thread pool factory instance
-		factoryClassName = ThreadPoolFactory.class.getName();
+		factoryClassName = DefaultThreadPoolFactory.class.getName();
 		configuration = FactoryUtils.getDefaultConfiguration();
-		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(factoryClassName);
+		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(factoryClassName, ThreadPoolFactory.class);
 		assertNotNull(threadPoolFactory);
 	}
 	

@@ -10,9 +10,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.shirdrn.easyrun.common.ConnectionPoolFactory;
 import org.shirdrn.easyrun.common.ConnectionPoolService;
 import org.shirdrn.easyrun.common.ObjectFactory;
-import org.shirdrn.easyrun.component.connectionpool.ConnectionPoolFactory;
+import org.shirdrn.easyrun.component.connectionpool.DefaultConnectionPoolFactory;
 import org.shirdrn.easyrun.component.connectionpool.JDBCConnectionPool;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
@@ -23,12 +24,11 @@ public class TestConnectionPoolFactory {
 	ObjectFactory<String, ConnectionPoolService> connectionPoolFactory;
 	ConnectionPoolService connectionPoolService;
 	
-	@SuppressWarnings("unchecked")
 	@Before
 	public void initialize() {
 		// create connection pool factory instance
-		factoryClassName = ConnectionPoolFactory.class.getName();
-		connectionPoolFactory = (ObjectFactory<String, ConnectionPoolService>) FactoryUtils.getFactory(factoryClassName);
+		factoryClassName = DefaultConnectionPoolFactory.class.getName();
+		connectionPoolFactory = (ObjectFactory<String, ConnectionPoolService>) FactoryUtils.getFactory(factoryClassName, ConnectionPoolFactory.class);
 		assertNotNull(connectionPoolFactory);
 	}
 	
