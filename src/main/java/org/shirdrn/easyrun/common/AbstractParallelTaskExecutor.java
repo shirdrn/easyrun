@@ -32,14 +32,15 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		super();
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void configure(Configuration config) {
 		super.configure(config);
 		this.config = config;
 		checkInterval = config.getRContext().getLong("component.thread.pool.future.queue.check.interval", 500);
-		String poolClazz = config.getRContext().get("component.thread.pool.class", "org.shirdrn.easyrun.component.threadpool.ThreadPoolFactory");
-		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(poolClazz);
+		
+		String poolFactoryClazz = config.getRContext().get("component.thread.pool.factory.class", 
+				"org.shirdrn.easyrun.component.threadpool.DefaultThreadPoolFactory");
+		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(poolFactoryClazz, ThreadPoolFactory.class);
 		int futureQSize = config.getRContext().getInt("component.thread.pool.future.queue.size", Integer.MAX_VALUE);
 		futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
 	}
@@ -109,13 +110,13 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 									executionResult.setFailureCause(f.get().getFailureCause());
 									errorChildTaskExecutor = f.get().getChildTaskExecutor();
 									// cancel all submitted already running tasks
-									if(terminateWhenFailure) {
+									if(isTerminateWhenFailure()) {
 										cancelAll();
 										break;
 									}
 								}
 							} else {
-								if(!terminateWhenFailure) {
+								if(!isTerminateWhenFailure()) {
 									if(f.get().getStatus() == Status.SUCCESS) {
 										CKLOG.info("Child task executor success: childResult=" + f.get());
 									} else {
@@ -136,7 +137,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 						// error caught
 						if(childCaughtError) {
 							while(true) {
-								if(completed && terminateWhenFailure) {
+								if(completed && isTerminateWhenFailure()) {
 									break;
 								}
 								Thread.sleep(checkInterval);
@@ -172,7 +173,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 	protected void startChildTaskExecutor(E element) throws ChildTaskExecutionException {
 		Worker worker = new Worker(element);
 		if(!childCaughtError 
-				|| (childCaughtError && !terminateWhenFailure)) {
+				|| (childCaughtError && !isTerminateWhenFailure())) {
 			Future<ChildTaskExecutionResult> future = getThreadPool().submit(worker);
 			LOG.debug("Submit a child task: worker=" + worker);
 			try {

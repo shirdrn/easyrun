@@ -2,7 +2,7 @@ package org.shirdrn.easyrun.common;
 
 import org.shirdrn.easyrun.config.Configuration;
 
-public interface TaskExecutor<T> {
+public interface TaskExecutor<T> extends Breakable {
 	
 	void execute();
 	T getResult();

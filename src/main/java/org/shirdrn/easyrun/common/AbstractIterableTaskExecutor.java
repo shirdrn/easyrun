@@ -46,8 +46,8 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			while(iter.hasNext()) {
 				try {
 					E element = iter.next();
-					if(childCaughtError && terminateWhenFailure) {
-						LOG.debug("childCaughtError=" + childCaughtError + ", terminateParentWhenChildFailure=" + terminateWhenFailure);
+					if(childCaughtError && isTerminateWhenFailure()) {
+						LOG.debug("childCaughtError=" + childCaughtError);
 						TaskExecutor<ChildTaskExecutionResult> child = getErrorChildTaskExecutor();
 						LOG.info("Child failed to execute: childResult=" + child.getResult());
 						throw new ChildTaskExecutionException(child.getResult());
@@ -186,6 +186,16 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			buf.append(getClass().getSimpleName())
 			.append("[id=").append(id);
 			return buf.toString();
+		}
+
+		@Override
+		public boolean isTerminateWhenFailure() {
+			return AbstractIterableTaskExecutor.this.isTerminateWhenFailure();
+		}
+
+		@Override
+		public void setTerminateWhenFailure(boolean terminateWhenFailure) {
+			AbstractIterableTaskExecutor.this.setTerminateWhenFailure(terminateWhenFailure);			
 		}
 
 	}

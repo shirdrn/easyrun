@@ -14,7 +14,7 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	protected String statDateFormat = "yyyyMMddHHmmss";
 	protected Status status = Status.UNKNOWN;
 	protected int maxRetryTimes = 0;
-	protected boolean terminateWhenFailure;
+	private boolean terminateWhenFailure = true;
 	protected T executionResult;
 	protected Date startWhen;
 	protected Date finishWhen;
@@ -27,7 +27,6 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	@Override
 	public void configure(Configuration config) {
 		name = getName();
-		terminateWhenFailure = config.getRContext().getBoolean("common.terminate.when.failure", true);
 		maxRetryTimes = config.getRContext().getInt("common.failure.max.retry.times", maxRetryTimes);
 		statDateFormat = config.getRContext().get("common.stat.date.format", "yyyyMMddHHmmss");
 	}
@@ -81,6 +80,16 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	@Override
 	public T getResult() {
 		return executionResult;
+	}
+
+	@Override
+	public boolean isTerminateWhenFailure() {
+		return terminateWhenFailure;
+	}
+
+	@Override
+	public void setTerminateWhenFailure(boolean terminateWhenFailure) {
+		this.terminateWhenFailure = terminateWhenFailure;		
 	}
 	
 }
