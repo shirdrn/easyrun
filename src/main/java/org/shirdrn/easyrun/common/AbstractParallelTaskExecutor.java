@@ -27,6 +27,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 	private volatile boolean completed = false;
 	private final AtomicBoolean notified = new AtomicBoolean(false);
 	private Configuration config;
+	private boolean isThreadPoolShared = true;
 	
 	public AbstractParallelTaskExecutor() {
 		super();
@@ -41,6 +42,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		String poolFactoryClazz = config.getRContext().get("component.thread.pool.factory.class", 
 				"org.shirdrn.easyrun.component.threadpool.DefaultThreadPoolFactory");
 		threadPoolFactory = (ObjectFactory<ContextReadable, ThreadPoolService>) FactoryUtils.getFactory(poolFactoryClazz, ThreadPoolFactory.class);
+		isThreadPoolShared = config.getRContext().getBoolean("component.thread.pool.shared", true);
 		int futureQSize = config.getRContext().getInt("component.thread.pool.future.queue.size", Integer.MAX_VALUE);
 		futureQ = new LinkedBlockingQueue<Future<ChildTaskExecutionResult>>(futureQSize);
 	}
@@ -73,8 +75,10 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 			}
 		}
 		// close thread pool
-		LOG.info("Close thread pool: pool=" + getThreadPool());
-		threadPoolFactory.close(getThreadPool());
+		if(!isThreadPoolShared) {
+			LOG.info("Close thread pool: pool=" + getThreadPool());
+			threadPoolFactory.close(getThreadPool());
+		}
 		LOG.info("Parent exit.");
 	}
 	
