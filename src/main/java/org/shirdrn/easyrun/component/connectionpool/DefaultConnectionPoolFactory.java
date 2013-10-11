@@ -16,17 +16,17 @@ public class DefaultConnectionPoolFactory extends ConnectionPoolFactory {
 	
 	@Override
 	public ConnectionPoolService get(String key) {
-		ConnectionPoolService pool = cache.get(key);
+		ConnectionPoolService pool = super.get(key);
 		if(pool == null) {
 			pool = (ConnectionPoolService) ReflectionUtils.getInstance(key);
-			cache.put(key, pool);
+			super.put(key, pool);
 		}
 		return pool;
 	}
 	
 	@Override
 	public void closeAll() {
-		Iterator<Entry<String, ConnectionPoolService>> iter = cache.entrySet().iterator();
+		Iterator<Entry<String, ConnectionPoolService>> iter = super.iterator();
 		while(iter.hasNext()) {
 			ConnectionPoolService pool = iter.next().getValue();
 			close(pool);

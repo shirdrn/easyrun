@@ -18,7 +18,7 @@ public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 	
 	@Override
 	public ThreadPoolService get(ContextReadable key) {
-		ThreadPoolService pool = cache.get(key);
+		ThreadPoolService pool = super.get(key);
 		if(pool == null) {
 			String name = key.get("component.thread.pool.name", "EASYRUN");
 			int nThreads = key.getInt("component.thread.pool.worker.count", 1);
@@ -27,14 +27,14 @@ public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 			pool = new ManagedThreadPool(nThreads, nThreads,
 					0L, TimeUnit.MILLISECONDS, q, new NamedThreadFactory(name), 
 					new ScheduleAgainPolicy(workQSize));
-			cache.put(key, pool);
+			super.put(key, pool);
 		}
 		return pool;
 	}
 	
 	@Override
 	public void closeAll() {
-		Iterator<Entry<ContextReadable, ThreadPoolService>> iter = cache.entrySet().iterator();
+		Iterator<Entry<ContextReadable, ThreadPoolService>> iter = super.iterator();
 		while(iter.hasNext()) {
 			ThreadPoolService pool = iter.next().getValue();
 			if(!pool.isShutdown()) {

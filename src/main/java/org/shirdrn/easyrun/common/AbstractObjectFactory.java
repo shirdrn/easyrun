@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 public abstract class AbstractObjectFactory<K, V extends Closeable> implements ObjectFactory<K, V> {
 
-	protected final Map<K, V> cache = new HashMap<K, V>();
+	private final Map<K, V> cache = new HashMap<K, V>();
 	
 	public AbstractObjectFactory() {
 		super();
@@ -42,6 +42,16 @@ public abstract class AbstractObjectFactory<K, V extends Closeable> implements O
 	@Override
 	public Iterator<Entry<K, V>> iterator() {
 		return cache.entrySet().iterator();
+	}
+
+	@Override
+	public V get(K key) {
+		return cache.get(key);
+	}
+
+	@Override
+	public void put(K key, V value) {
+		cache.put(key, value);
 	}
 
 }
