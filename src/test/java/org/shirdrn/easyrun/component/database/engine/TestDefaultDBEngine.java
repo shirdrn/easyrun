@@ -43,6 +43,29 @@ public class TestDefaultDBEngine {
 		DBCollection<DBResult> c = iterate(builder);
 		c.close();
 	}
+	
+	@Test
+	public void reset() throws SQLException, IOException {
+		String sql = "SELECT post_author,post_title FROM wp_posts WhERE id > ? AND post_author = ?";
+		SQLBuilder builder = new DefaultSQLBuilder(engine);
+		builder.build(sql)
+			.set(0)
+			.set(3);
+		LOG.info("Before reset: ");
+		LOG.info("builder=" + builder);
+		DBCollection<DBResult> c = iterate(builder);
+		c.close();
+		
+		builder.reset();
+		sql = "SELECT post_author,post_title FROM wp_posts WhERE id > ? AND post_author = ?";
+		builder.build(sql)
+		.set(1, -1)
+		.set(2, 2);
+		LOG.info("After reset: ");
+		LOG.info("builder=" + builder);
+		c = iterate(builder);
+		c.close();
+	}
 
 	private DBCollection<DBResult> iterate(SQLBuilder builder) throws SQLException {
 		DBCollection<DBResult> c = engine.executeQuery(builder);
