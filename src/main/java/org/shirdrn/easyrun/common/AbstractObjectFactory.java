@@ -7,8 +7,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public abstract class AbstractObjectFactory<K, V extends Closeable> implements ObjectFactory<K, V> {
 
+	private static final Log LOG = LogFactory.getLog(AbstractObjectFactory.class);
 	private final Map<K, V> cache = new HashMap<K, V>();
 	
 	public AbstractObjectFactory() {
@@ -27,7 +31,10 @@ public abstract class AbstractObjectFactory<K, V extends Closeable> implements O
 				cache.entrySet().iterator();
 		while(iter.hasNext()) {
 			try {
-				iter.next().getValue().close();
+				Entry<K, V> entry = iter.next();
+				entry.getValue().close();
+				LOG.info("Closed: key=" + entry.getKey() + ", value=" + entry.getValue());
+				iter.remove();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -49,9 +56,18 @@ public abstract class AbstractObjectFactory<K, V extends Closeable> implements O
 		return cache.get(key);
 	}
 
-	@Override
-	public void put(K key, V value) {
+	protected void put(K key, V value) {
 		cache.put(key, value);
+		LOG.info("Cached: key=" + key + ", value=" + value);
+	}
+	
+	protected void remove(V value) {
+		Iterator<Entry<K, V>> iter = iterator();
+		while(iter.hasNext()) {
+			if(value != null && value.equals(iter.next().getValue())) {
+				iter.remove();break;
+			}
+		}
 	}
 
 }

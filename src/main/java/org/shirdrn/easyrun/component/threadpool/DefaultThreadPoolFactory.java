@@ -20,15 +20,25 @@ public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 	public ThreadPoolService get(ContextReadable key) {
 		ThreadPoolService pool = super.get(key);
 		if(pool == null) {
-			String name = key.get("component.thread.pool.name", "EASYRUN");
-			int nThreads = key.getInt("component.thread.pool.worker.count", 1);
-			int workQSize = 2 * nThreads;
-			BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(workQSize);
-			pool = new ManagedThreadPool(nThreads, nThreads,
-					0L, TimeUnit.MILLISECONDS, q, new NamedThreadFactory(name), 
-					new ScheduleAgainPolicy(workQSize));
-			super.put(key, pool);
+			pool = createAndCachePool(key);
+		} else {
+			if(pool.isShutdown() || pool.isTerminated()) {
+				pool = createAndCachePool(key);
+			}
 		}
+		return pool;
+	}
+
+	private ThreadPoolService createAndCachePool(ContextReadable key) {
+		ThreadPoolService pool = null;
+		String name = key.get("component.thread.pool.name", "EASYRUN");
+		int nThreads = key.getInt("component.thread.pool.worker.count", 1);
+		int workQSize = 2 * nThreads;
+		BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(workQSize);
+		pool = new ManagedThreadPool(nThreads, nThreads,
+				0L, TimeUnit.MILLISECONDS, q, new NamedThreadFactory(name), 
+				new ScheduleAgainPolicy(workQSize));
+		super.put(key, pool);
 		return pool;
 	}
 	
@@ -49,4 +59,5 @@ public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 			value.shutdown();
 		}
 	}
+
 }

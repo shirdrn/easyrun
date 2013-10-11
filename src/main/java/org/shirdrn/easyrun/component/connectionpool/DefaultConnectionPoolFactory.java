@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.ConnectionPoolFactory;
 import org.shirdrn.easyrun.common.ConnectionPoolService;
 import org.shirdrn.easyrun.utils.ReflectionUtils;
 
 public class DefaultConnectionPoolFactory extends ConnectionPoolFactory {
 
+	private static final Log LOG = LogFactory.getLog(DefaultConnectionPoolFactory.class);
 	public DefaultConnectionPoolFactory() {
 		super();
 	}
@@ -37,6 +40,8 @@ public class DefaultConnectionPoolFactory extends ConnectionPoolFactory {
 	public void close(ConnectionPoolService value) {
 		try {
 			value.close();
+			super.remove(value);
+			LOG.info("Closed: value=" + value);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
