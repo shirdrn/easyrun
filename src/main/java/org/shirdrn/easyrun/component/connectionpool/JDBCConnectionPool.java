@@ -16,26 +16,34 @@ public final class JDBCConnectionPool implements ConnectionPoolService {
 	private static String JDBC_PROPERTIES = "jdbc.properties";
 	private final ContextReadable configurationReader;
 	private String jdbcUrl;
+	private String user;
+	private String password;
 	private String config;
 	
 	public JDBCConnectionPool() {
 		this.config = JDBC_PROPERTIES;
 		this.configurationReader = new PropertiesConfiguration(config);
+		String driverClass = configurationReader.get("jdbc.driverClass");
 		try {
-			String driverClass = configurationReader.get("jdbc.driverClass");
-			LOG.info("JDBC Driver: driverClass=" + driverClass);
 			Class.forName(driverClass);
+			jdbcUrl = configurationReader.get("jdbc.jdbcUrl");
+			user = configurationReader.get("jdbc.user");
+			password = configurationReader.get("jdbc.password");
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
+		} finally {
+			LOG.info("JDBC: driver=" + driverClass + ", url=" + jdbcUrl + ", user=" + user + ", password=******");
 		}
-		jdbcUrl = configurationReader.get("jdbc.jdbcUrl");
-		LOG.info("JDBC url; url=" + jdbcUrl);
 	}
 	
 	@Override
 	public synchronized final Connection getConnection() {
 		try {
-			return DriverManager.getConnection(jdbcUrl);
+			if(user == null) {
+				return DriverManager.getConnection(jdbcUrl);
+			} else {
+				return DriverManager.getConnection(jdbcUrl, user, password);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
