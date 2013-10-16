@@ -25,8 +25,10 @@ public class TestDefaultTaskExecutorChainBuilder {
 	@Test
 	public void fireChain() {
 		builder
-//		.chain(MySequentialTaskExecutor.class)
-//		.chain(MySimpleTaskExecutor.class)
+		.chain(MySequentialTaskExecutor.class)
+		.chain(MySimpleTaskExecutor.class)
+		.chain(PrintTaskExecutor.class)
+		.chain(PrintTaskExecutor.class)
 		.chain(PrintTaskExecutor.class)
 		.fireChain();
 	}
