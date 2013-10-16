@@ -4,12 +4,24 @@ import org.shirdrn.easyrun.common.TaskExecutor.Status;
 
 public class DefaultExecutionResult implements ExecutionResult {
 
+	private String name;
 	private Status status;
 	private String startWhen;
 	private String finishWhen;
 	private long timeTaken;
 	private Exception failureCause;
 	
+	public DefaultExecutionResult() {
+		super();
+		status = Status.UNKNOWN;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
 	public Status getStatus() {
 		return status;
 	}
@@ -43,6 +55,9 @@ public class DefaultExecutionResult implements ExecutionResult {
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
+		if(name != null) {
+			sb.append("name=" + name + ", ");
+		}
 		sb.append("status=" + status + ", ")
 		.append("startWhen=" + startWhen + ", ")
 		.append("finishWhen=" + finishWhen + ", ")

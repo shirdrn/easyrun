@@ -9,7 +9,7 @@ import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.config.Configuration;
 import org.shirdrn.easyrun.utils.TimeUtils;
 
-public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecutor<ExecutionResult> implements Iterable<E> {
+public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTaskExecutor implements Iterable<E> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractIterableTaskExecutor.class);
 	protected final AtomicInteger totalCount = new AtomicInteger(0);
@@ -19,7 +19,6 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 	
 	public AbstractIterableTaskExecutor() {
 		super();
-		executionResult = new DefaultExecutionResult();
 	}
 	
 	@Override
@@ -28,16 +27,6 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 	}
 	
 	protected abstract TaskExecutor<ChildTaskExecutionResult> getErrorChildTaskExecutor();
-	
-	@Override
-	public void execute() {
-		super.execute();
-		// set execution result
-		executionResult.setStartWhen(TimeUtils.format(startWhen, statDateFormat));
-		executionResult.setFinishWhen(TimeUtils.format(finishWhen, statDateFormat));
-		executionResult.setTimeTaken(timeTaken);
-		executionResult.setStatus(status);
-	}
 	
 	@Override
 	public void doBody() throws Exception {
@@ -58,9 +47,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 					throw e;
 				}
 			}
-			status = Status.SUCCESS;
 		} catch (Exception e) {
-			status = Status.FAILURE;
 			executionResult.setFailureCause(e);
 			throw e;
 		}
@@ -75,9 +62,11 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 	 */
 	protected abstract void process(E element) throws Exception;
 	
+	private final Log COG = LogFactory.getLog(ChildTaskExecutor.class);
+	
 	public class ChildTaskExecutor implements TaskExecutor<ChildTaskExecutionResult> {
 		
-		protected final int id;
+		private int id;
 		protected final E element;
 		protected final ChildTaskExecutionResult childResult;
 		protected int maxChildRetryTimes = 0;
@@ -90,7 +79,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			childResult = new ChildTaskExecutionResult();
 			childResult.setChildTaskExecutor(this);
 			id = workerIdCounter.incrementAndGet();
-			childResult.setId(id);
+			childResult.setName(String.valueOf(id));
 		}
 		
 		@Override
@@ -117,8 +106,6 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			finishTime = new Date();
 			childResult.setFinishWhen(TimeUtils.format(finishTime, statDateFormat));
 			childResult.setTimeTaken(finishTime.getTime() - startTime.getTime());
-			childResult.setStatus(status);
-			logStat();
 			// record finished child worker
 			counter.incrementAndGet();
 		}
@@ -131,21 +118,19 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 				// retry
 				int retryTimes = maxRetryTimes;
 				for (int i = retryTimes; i > 0; i--) {
+					COG.info("Child retried: id=" + id + ", retryTimes=" + (retryTimes - i + 1) + ", cause=" + result);
 					result = executeChild();
-					if(result != null) {
-						LOG.debug("Child retried: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
-					} else {
-						LOG.debug("Child retried: retryTimes=" + (retryTimes - i + 1) + ", status=" + status);
+					if(result == null) {
 						break;
 					}
 				}
 			}
-			// set caught exception
+			// set result
 			if(result != null) {
-				status = Status.FAILURE;
+				childResult.setStatus(Status.FAILURE);
 				childResult.setFailureCause(result);
 			} else {
-				status = Status.SUCCESS;
+				childResult.setStatus(Status.SUCCESS);
 			}
 		}
 		
@@ -159,18 +144,6 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			return result;
 		}
 
-		public void logStat() {
-			StringBuffer log = new StringBuffer();
-			log.append("Finished child: ")
-			.append("name=" + name + ", ")
-			.append("id=" + childResult.getId() + ", ")
-			.append("status=" + childResult.getStatus() + ", ")
-			.append("start=" + childResult.getStartWhen() + ", ")
-			.append("finish=" + childResult.getFinishWhen() + ", ")
-			.append("timeTaken=" + childResult.getTimeTaken());
-			LOG.info(log.toString());
-		}
-
 		public E getElement() {
 			return element;
 		}
@@ -180,14 +153,6 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 			return childResult;
 		}
 		
-		@Override
-		public String toString() {
-			StringBuffer buf = new StringBuffer();
-			buf.append(getClass().getSimpleName())
-			.append("[id=").append(id);
-			return buf.toString();
-		}
-
 		@Override
 		public boolean isTerminateWhenFailure() {
 			return AbstractIterableTaskExecutor.this.isTerminateWhenFailure();
@@ -201,25 +166,15 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractTaskExecut
 	}
 	
 	public class ChildTaskExecutionResult extends DefaultExecutionResult {
+		
 		private ChildTaskExecutor childTaskExecutor;
-		private int id;
-		public int getId() {
-			return id;
-		}
-		public void setId(int id) {
-			this.id = id;
-		}
+		
 		public ChildTaskExecutor getChildTaskExecutor() {
 			return childTaskExecutor;
 		}
+		
 		public void setChildTaskExecutor(ChildTaskExecutor childTaskExecutor) {
 			this.childTaskExecutor = childTaskExecutor;
-		}
-		@Override
-		public String toString() {
-			StringBuffer sb = new StringBuffer();
-			sb.append("id=" + id + ", ").append(super.toString());
-			return sb.toString();
 		}
 	}
 	

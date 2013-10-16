@@ -4,7 +4,6 @@ import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.AbstractIterableTaskExecutor.ChildTaskExecutionException;
 import org.shirdrn.easyrun.config.Configuration;
 
 public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
@@ -12,65 +11,58 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	private static final Log LOG = LogFactory.getLog(AbstractTaskExecutor.class);
 	protected String name;
 	protected String statDateFormat = "yyyyMMddHHmmss";
-	protected Status status = Status.UNKNOWN;
 	protected int maxRetryTimes = 0;
-	private boolean terminateWhenFailure = true;
 	protected T executionResult;
 	protected Date startWhen;
 	protected Date finishWhen;
 	protected long timeTaken;
+
+	private boolean terminateWhenFailure = true;
 	
 	public AbstractTaskExecutor() {
 		super();
+		name = getName();
 	}
 	
 	@Override
 	public void configure(Configuration config) {
-		name = getName();
 		maxRetryTimes = config.getRContext().getInt("common.failure.max.retry.times", maxRetryTimes);
 		statDateFormat = config.getRContext().get("common.stat.date.format", "yyyyMMddHHmmss");
 	}
 	
 	@Override
 	public void execute() {
+		startWhen = new Date();
 		try {
-			startWhen = new Date();
 			doBody();
-			status = Status.SUCCESS;
-		} catch(Exception e) {
-			Exception result = null;
-			if(! (e instanceof ChildTaskExecutionException)) {
-				for(int i=maxRetryTimes; i>0; i--) {
-					result = executeAgain();
-					if(result != null) {
-						LOG.info("Parent retried: retryTimes=" + (maxRetryTimes - i + 1) + ", status=" + status);
-					} else {
-						LOG.info("Parent retried: retryTimes=" + (maxRetryTimes - i + 1) + ", status=" + status);
-						break;
-					}
-				}
-			}
-			if(result != null) {
-				status = Status.FAILURE;
-			} else {
-				status = Status.SUCCESS;
+		} catch (Exception e) {
+			Exception retryResult = retry(e);
+			if(retryResult != null) {
+				throw new RuntimeException("Failed after retry to execute: ", retryResult);
 			}
 		} finally {
 			finishWhen = new Date();
 			timeTaken = finishWhen.getTime() - startWhen.getTime();
 		}
+		
 	}
 	
-	private Exception executeAgain() {
-		Exception result = null;
-		try {
-			doBody();
-		} catch (Exception e) {
-			result = e;
+	protected Exception retry(Exception e) {
+		Exception result = e;
+		for(int i=maxRetryTimes; i>0; i--) {
+			LOG.info("Parent retried: name=" + name +", retryTimes=" + (maxRetryTimes - i + 1) + ", cause=" + result);
+			try {
+				doBody();
+			} catch (Exception ex) {
+				result = ex;
+			}
+			if(result == null) {
+				break;
+			}
 		}
 		return result;
 	}
-	
+
 	protected abstract void doBody() throws Exception;
 	
 	protected String getName() {
@@ -81,7 +73,7 @@ public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 	public T getResult() {
 		return executionResult;
 	}
-
+	
 	@Override
 	public boolean isTerminateWhenFailure() {
 		return terminateWhenFailure;

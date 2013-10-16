@@ -54,12 +54,12 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 	@Override
 	public void doBody() throws Exception {
 		// initialize future checker
-		LOG.info("Try to start child execution checker thread...");
-		final ChildExecutionChecker checker = new ChildExecutionChecker();
+		LOG.info("Try to start checker thread...");
+		final ResultChecker checker = new ResultChecker();
 		checker.setName("CHECKER");
 		checker.setDaemon(true);
 		checker.start();
-		LOG.info("Child execution checker started!");
+		LOG.info("Checker started!");
 		// run body
 		super.doBody();
 		completed = true;
@@ -87,88 +87,108 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		return errorChildTaskExecutor;
 	}
 
-	private final Log CKLOG = LogFactory.getLog(ChildExecutionChecker.class);
-	final class ChildExecutionChecker extends Thread {
+	private final Log KOG = LogFactory.getLog(ResultChecker.class);
+	
+	private final class ResultChecker extends Thread {
+		
 		private boolean running = false;
-		public ChildExecutionChecker() {
+		
+		public ResultChecker() {
+			super();
 			this.running = true;
 		}
+		
 		@Override
 		public void run() {
 			while(running) {
-				CKLOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
+				KOG.debug("Check counter: counter=" + counter.get() + ", totalCount=" + totalCount.get());
 				try {
-					if(!futureQ.isEmpty()) {
-						CKLOG.debug("Check future queue: size=" + futureQ.size());
-						Iterator<Future<ChildTaskExecutionResult>> iter = futureQ.iterator();
-						while(iter.hasNext()) {
-							Future<ChildTaskExecutionResult> f = iter.next();
-							// no child error
-							if(!childCaughtError) {
-								if(f.get().getStatus() == Status.SUCCESS) {
-									iter.remove();
-									CKLOG.debug("Removed: result=" + f.get());
-								} else if(f.get().getStatus() == Status.FAILURE) {
-									childCaughtError = true;
-									CKLOG.info("Child task executor failure: childResult=" + f.get());
-									executionResult.setFailureCause(f.get().getFailureCause());
-									errorChildTaskExecutor = f.get().getChildTaskExecutor();
-									// cancel all submitted already running tasks
-									if(isTerminateWhenFailure()) {
-										cancelAll();
-										break;
-									}
-								}
-							} else {
-								if(!isTerminateWhenFailure()) {
-									if(f.get().getStatus() == Status.SUCCESS) {
-										CKLOG.info("Child task executor success: childResult=" + f.get());
-									} else {
-										CKLOG.warn("Child task executor success: childResult=" + f.get());
-									}
-									iter.remove();
-								}
-							}
-						}
-					} else {
-						// futureQ is empty
+					Future<ChildTaskExecutionResult> f = futureQ.poll();
+					if(f == null) {
+						KOG.info("Future queue is empty, Wait...");
 						Thread.sleep(checkInterval);
-					}
-				} catch (Exception e) {
-					CKLOG.warn("Check future queue: ", e);
-				} finally {
-					try {
-						// error caught
-						if(childCaughtError) {
-							while(true) {
-								if(completed && isTerminateWhenFailure()) {
+					} else {
+						KOG.debug("Check child task: future=" + f + ", qsize=" + futureQ.size());
+						ChildTaskExecutionResult result = f.get();
+						// no child error
+						KOG.debug("Before check result.");
+						if(!childCaughtError) {
+							if(result.getStatus() == Status.SUCCESS) {
+								KOG.info(logResult(result));
+							} else if(result.getStatus() == Status.FAILURE) {
+								childCaughtError = true;
+								KOG.info(logResult(result));
+								executionResult.setFailureCause(result.getFailureCause());
+								errorChildTaskExecutor = result.getChildTaskExecutor();
+								// cancel all submitted already running tasks
+								if(isTerminateWhenFailure()) {
+									cancelAll();
 									break;
 								}
-								Thread.sleep(checkInterval);
 							}
-							notifyParent();
-							CKLOG.info("Child task execution checker prepare to exit...");
+						} else {
+							if(result.getStatus() == Status.SUCCESS) {
+								KOG.info(logResult(result));
+							} else {
+								if(!isTerminateWhenFailure()) {
+									KOG.warn("Ignore. " + logResult(result));
+								} else {
+									KOG.error("Ignore. " + logResult(result));
+								}
+							}
 						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						KOG.debug("After check result.");
+					}
+				} catch (Exception e) {
+					KOG.warn("Check future queue, catch exeception: ", e);
+				}
+				
+				KOG.debug("Check: completed=" + completed + ", isFutureQEmpty=" + futureQ.isEmpty());
+				if(completed) {
+					if(futureQ.isEmpty()) {
+						notifyParent();
+						running = false;
+						KOG.info("Checker prepare to exit...");
 					}
 				}
 			}
-			CKLOG.info("Finished to run child execution checker thread.");
+			// finally, set parent executor status
+			if(childCaughtError) {
+				while(!completed) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) { }
+				}
+				notifyParent();
+			}
+			KOG.info("Finished to run checker thread.");
 		}
-
+		
+		private String logResult(ChildTaskExecutionResult result) {
+			return "Child result: " + result.toString();
+		}
+		
 		private void cancelAll() {
 			Iterator<Future<ChildTaskExecutionResult>> iter = futureQ.iterator();
 			while(iter.hasNext()) {
 				Future<ChildTaskExecutionResult> f = iter.next();
 				try {
 					f.cancel(true);
-					CKLOG.info("Attempt to cancel child task: id=" + f.get().getId() + ", name=" + f.get().getChildTaskExecutor().getClass().getSimpleName());
+					KOG.info("Attempt to cancel child task: name=" + f.get().getName());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (ExecutionException e) {
 					e.printStackTrace();
 				}
+			}
+		}
+	}
+	
+	private void notifyParent() {
+		if(notified.compareAndSet(false, true)) {
+			LOG.info("Notify parent to exit.");
+			synchronized(lock) {
+				lock.notify();
 			}
 		}
 	}
@@ -202,38 +222,12 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 			try {
 				super.execute();
 			} catch (Exception e) {
-				if(!(e instanceof InterruptedException)) {
-					if(childResult.getFailureCause() == null) {
-						childResult.setFailureCause(e);
-					}
-				} else {
-					LOG.info("Interrupted, and exit.");
+				if(childResult.getFailureCause() == null) {
+					childResult.setFailureCause(e);
 				}
 			}
 			return childResult;
 		}
-		
-		@Override
-		protected void afterRun() {
-			super.afterRun();
-			LOG.debug("Counter: counter=" + counter.get() + ", totalCount=" + totalCount.get() + ", completed=" + completed);
-			if(completed) {
-				// permit to execute regardless of child errors
-				if(counter.get() == totalCount.get()) {
-					notifyParent();
-				}
-			}
-		}
-
 	}
 	
-	private void notifyParent() {
-		if(notified.compareAndSet(false, true)) {
-			LOG.info("Notify parent to exit.");
-			synchronized(lock) {
-				lock.notify();
-			}
-		}
-	}
-
 }
