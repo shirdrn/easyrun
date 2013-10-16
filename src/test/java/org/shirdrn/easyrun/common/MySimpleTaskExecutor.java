@@ -3,7 +3,7 @@ package org.shirdrn.easyrun.common;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class MySimpleTaskExecutor extends AbstractSimpleTaskLExecutor {
+public class MySimpleTaskExecutor extends AbstractDefaultTaskExecutor {
 
 	private static final Log LOG = LogFactory.getLog(MySimpleTaskExecutor.class);
 	
