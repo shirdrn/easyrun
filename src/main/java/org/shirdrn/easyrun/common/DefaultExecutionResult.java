@@ -1,5 +1,8 @@
 package org.shirdrn.easyrun.common;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
 
 public class DefaultExecutionResult implements ExecutionResult {
@@ -9,10 +12,11 @@ public class DefaultExecutionResult implements ExecutionResult {
 	private String startWhen;
 	private String finishWhen;
 	private long timeTaken;
-	private Exception failureCause;
+	private List<Exception> failureCauses;
 	
 	public DefaultExecutionResult() {
 		super();
+		failureCauses = new ArrayList<>();
 		status = Status.UNKNOWN;
 	}
 	
@@ -46,11 +50,8 @@ public class DefaultExecutionResult implements ExecutionResult {
 	public void setTimeTaken(long timeTaken) {
 		this.timeTaken = timeTaken;
 	}
-	public Exception getFailureCause() {
-		return failureCause;
-	}
-	public void setFailureCause(Exception failureCause) {
-		this.failureCause = failureCause;
+	public List<Exception> getFailureCauses() {
+		return failureCauses;
 	}
 	@Override
 	public String toString() {
@@ -62,8 +63,8 @@ public class DefaultExecutionResult implements ExecutionResult {
 		.append("startWhen=" + startWhen + ", ")
 		.append("finishWhen=" + finishWhen + ", ")
 		.append("timeTaken=" + timeTaken);
-		if(failureCause != null) {
-			sb.append(", failureCause=" + failureCause.getClass().getName() + ": " + failureCause.getMessage());
+		if(!failureCauses.isEmpty()) {
+			sb.append(", failureCauses=" + failureCauses);
 		}
 		return sb.toString();
 	}

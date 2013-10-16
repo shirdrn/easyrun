@@ -48,7 +48,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTas
 				}
 			}
 		} catch (Exception e) {
-			executionResult.setFailureCause(e);
+			executionResult.getFailureCauses().add(e);
 			throw e;
 		}
 	}
@@ -128,7 +128,7 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTas
 			// set result
 			if(result != null) {
 				childResult.setStatus(Status.FAILURE);
-				childResult.setFailureCause(result);
+				childResult.getFailureCauses().add(result);
 			} else {
 				childResult.setStatus(Status.SUCCESS);
 			}

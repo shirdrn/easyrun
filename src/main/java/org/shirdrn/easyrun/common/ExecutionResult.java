@@ -1,5 +1,7 @@
 package org.shirdrn.easyrun.common;
 
+import java.util.List;
+
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
 
 public interface ExecutionResult {
@@ -16,7 +18,6 @@ public interface ExecutionResult {
 	long getTimeTaken();
 	void setTimeTaken(long timeTaken);
 	
-	Exception getFailureCause();
-	void setFailureCause(Exception failureCause);
+	List<Exception> getFailureCauses();
 	
 }

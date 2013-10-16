@@ -118,7 +118,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 							} else if(result.getStatus() == Status.FAILURE) {
 								childCaughtError = true;
 								KOG.info(logResult(result));
-								executionResult.setFailureCause(result.getFailureCause());
+								executionResult.getFailureCauses().addAll(result.getFailureCauses());
 								errorChildTaskExecutor = result.getChildTaskExecutor();
 								// cancel all submitted already running tasks
 								if(isTerminateWhenFailure()) {
@@ -222,9 +222,7 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 			try {
 				super.execute();
 			} catch (Exception e) {
-				if(childResult.getFailureCause() == null) {
-					childResult.setFailureCause(e);
-				}
+				childResult.getFailureCauses().add(e);
 			}
 			return childResult;
 		}
