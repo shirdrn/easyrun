@@ -87,9 +87,9 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		return errorChildTaskExecutor;
 	}
 
-	private final Log KOG = LogFactory.getLog(ResultChecker.class);
+	private static final Log KOG = LogFactory.getLog(AbstractParallelTaskExecutor.ResultChecker.class);
 	
-	private final class ResultChecker extends Thread {
+	final class ResultChecker extends Thread {
 		
 		private boolean running = false;
 		

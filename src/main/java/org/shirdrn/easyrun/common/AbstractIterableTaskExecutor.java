@@ -62,9 +62,9 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTas
 	 */
 	protected abstract void process(E element) throws Exception;
 	
-	private final Log COG = LogFactory.getLog(ChildTaskExecutor.class);
+	private static final Log COG = LogFactory.getLog(AbstractIterableTaskExecutor.ChildTaskExecutor.class);
 	
-	public class ChildTaskExecutor implements TaskExecutor<ChildTaskExecutionResult> {
+	class ChildTaskExecutor implements TaskExecutor<ChildTaskExecutionResult> {
 		
 		private int id;
 		protected final E element;
