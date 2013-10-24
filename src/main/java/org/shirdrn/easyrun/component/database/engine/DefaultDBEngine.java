@@ -5,8 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.shirdrn.easyrun.common.ConnectionPoolFactory;
-import org.shirdrn.easyrun.common.ConnectionPoolService;
+import org.shirdrn.easyrun.component.common.ConnectionPoolFactory;
+import org.shirdrn.easyrun.component.common.ConnectionPoolService;
 import org.shirdrn.easyrun.component.connectionpool.DefaultConnectionPoolFactory;
 import org.shirdrn.easyrun.component.connectionpool.JDBCConnectionPool;
 import org.shirdrn.easyrun.component.database.DBCollection;

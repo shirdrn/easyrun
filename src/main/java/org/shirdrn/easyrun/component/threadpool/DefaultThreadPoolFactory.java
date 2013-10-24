@@ -6,9 +6,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.shirdrn.easyrun.common.ThreadPoolFactory;
-import org.shirdrn.easyrun.common.ThreadPoolService;
 import org.shirdrn.easyrun.common.config.ContextReadable;
+import org.shirdrn.easyrun.component.common.ThreadPoolFactory;
+import org.shirdrn.easyrun.component.common.ThreadPoolService;
 
 public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 

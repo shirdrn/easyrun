@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.ConnectionPoolFactory;
-import org.shirdrn.easyrun.common.ConnectionPoolService;
+import org.shirdrn.easyrun.component.common.ConnectionPoolFactory;
+import org.shirdrn.easyrun.component.common.ConnectionPoolService;
 import org.shirdrn.easyrun.utils.ReflectionUtils;
 
 public class DefaultConnectionPoolFactory extends ConnectionPoolFactory {

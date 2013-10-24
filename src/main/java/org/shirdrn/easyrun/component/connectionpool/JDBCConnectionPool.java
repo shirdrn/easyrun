@@ -6,29 +6,32 @@ import java.sql.SQLException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.common.ConnectionPoolService;
 import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
+import org.shirdrn.easyrun.component.common.AbstractPool;
+import org.shirdrn.easyrun.component.common.ConnectionPoolService;
 
-public final class JDBCConnectionPool implements ConnectionPoolService {
+public final class JDBCConnectionPool extends AbstractPool implements ConnectionPoolService {
 	
 	private static final Log LOG = LogFactory.getLog(JDBCConnectionPool.class);
-	private static String JDBC_PROPERTIES = "jdbc.properties";
-	private final ContextReadable configurationReader;
+	private final ContextReadable context;
 	private String jdbcUrl;
 	private String user;
 	private String password;
-	private String config;
 	
 	public JDBCConnectionPool() {
-		this.config = JDBC_PROPERTIES;
-		this.configurationReader = new PropertiesConfiguration(config);
-		String driverClass = configurationReader.get("jdbc.driverClass");
+		this("jdbc.properties");
+	}
+	
+	public JDBCConnectionPool(String config) {
+		super(config);
+		this.context = new PropertiesConfiguration(config);
+		String driverClass = context.get("jdbc.driverClass");
 		try {
 			Class.forName(driverClass);
-			jdbcUrl = configurationReader.get("jdbc.jdbcUrl");
-			user = configurationReader.get("jdbc.user");
-			password = configurationReader.get("jdbc.password");
+			jdbcUrl = context.get("jdbc.jdbcUrl");
+			user = context.get("jdbc.user");
+			password = context.get("jdbc.password");
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -61,7 +64,6 @@ public final class JDBCConnectionPool implements ConnectionPoolService {
 				connection.close();
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}

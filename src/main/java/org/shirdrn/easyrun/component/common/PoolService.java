@@ -1,4 +1,4 @@
-package org.shirdrn.easyrun.common;
+package org.shirdrn.easyrun.component.common;
 
 import java.io.Closeable;
 

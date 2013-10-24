@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.shirdrn.easyrun.common.ThreadPoolService;
+import org.shirdrn.easyrun.component.common.ThreadPoolService;
 
 public class ManagedThreadPool extends ThreadPoolExecutor implements ThreadPoolService {
 
