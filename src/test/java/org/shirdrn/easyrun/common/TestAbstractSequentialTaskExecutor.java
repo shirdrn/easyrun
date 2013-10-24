@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.common.config.Configuration;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestAbstractSequentialTaskExecutor {

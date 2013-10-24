@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.shirdrn.easyrun.common.ThreadPoolFactory;
 import org.shirdrn.easyrun.common.ThreadPoolService;
-import org.shirdrn.easyrun.config.ContextReadable;
+import org.shirdrn.easyrun.common.config.ContextReadable;
 
 public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 

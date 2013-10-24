@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.ConnectionPoolService;
-import org.shirdrn.easyrun.config.ContextReadable;
-import org.shirdrn.easyrun.config.PropertiesConfiguration;
+import org.shirdrn.easyrun.common.config.ContextReadable;
+import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
 
 public final class JDBCConnectionPool implements ConnectionPoolService {
 	

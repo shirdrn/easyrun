@@ -1,6 +1,6 @@
 package org.shirdrn.easyrun.common;
 
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.common.config.Configuration;
 
 public interface TaskExecutor<T> extends Breakable {
 	

@@ -4,7 +4,7 @@ import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.common.config.Configuration;
 
 public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 

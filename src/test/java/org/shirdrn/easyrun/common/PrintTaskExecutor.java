@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.common.config.Configuration;
 
 public class PrintTaskExecutor extends AbstractParallelTaskExecutor<Entry<Integer, List<String>>> {
 	

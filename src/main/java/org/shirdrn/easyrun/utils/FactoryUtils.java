@@ -9,10 +9,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.shirdrn.easyrun.common.ObjectFactory;
-import org.shirdrn.easyrun.config.Configuration;
-import org.shirdrn.easyrun.config.ContextReadable;
-import org.shirdrn.easyrun.config.ContextWriteable;
-import org.shirdrn.easyrun.config.PropertiesConfiguration;
+import org.shirdrn.easyrun.common.config.Configuration;
+import org.shirdrn.easyrun.common.config.ContextReadable;
+import org.shirdrn.easyrun.common.config.ContextWriteable;
+import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
 
 public class FactoryUtils {
 

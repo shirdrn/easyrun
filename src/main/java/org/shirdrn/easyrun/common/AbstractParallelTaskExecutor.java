@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.config.Configuration;
-import org.shirdrn.easyrun.config.ContextReadable;
+import org.shirdrn.easyrun.common.config.Configuration;
+import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
 

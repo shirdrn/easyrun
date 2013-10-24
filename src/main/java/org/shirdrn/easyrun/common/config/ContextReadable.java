@@ -1,4 +1,4 @@
-package org.shirdrn.easyrun.config;
+package org.shirdrn.easyrun.common.config;
 
 public interface ContextReadable {
 

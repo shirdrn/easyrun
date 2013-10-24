@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.shirdrn.easyrun.config.Configuration;
+import org.shirdrn.easyrun.common.config.Configuration;
 import org.shirdrn.easyrun.utils.TimeUtils;
 
 public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTaskExecutor implements Iterable<E> {

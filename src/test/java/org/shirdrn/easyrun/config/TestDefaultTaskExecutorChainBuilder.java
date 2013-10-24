@@ -6,9 +6,9 @@ import org.junit.Test;
 import org.shirdrn.easyrun.common.MySequentialTaskExecutor;
 import org.shirdrn.easyrun.common.MySimpleTaskExecutor;
 import org.shirdrn.easyrun.common.PrintTaskExecutor;
-import org.shirdrn.easyrun.config.Configuration;
-import org.shirdrn.easyrun.config.DefaultTaskExecutorChainBuilder;
-import org.shirdrn.easyrun.config.TaskExecutorChainBuilder;
+import org.shirdrn.easyrun.common.config.Configuration;
+import org.shirdrn.easyrun.common.config.DefaultTaskExecutorChainBuilder;
+import org.shirdrn.easyrun.common.config.TaskExecutorChainBuilder;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
 public class TestDefaultTaskExecutorChainBuilder {
