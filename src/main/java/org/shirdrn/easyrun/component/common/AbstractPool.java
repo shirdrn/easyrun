@@ -1,5 +1,7 @@
 package org.shirdrn.easyrun.component.common;
 
+import javax.sql.DataSource;
+
 public class AbstractPool {
 
 	protected final String config;
@@ -12,4 +14,5 @@ public class AbstractPool {
 	public String getConfig() {
 		return config;
 	}
+
 }

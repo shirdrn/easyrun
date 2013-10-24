@@ -8,10 +8,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
-import org.shirdrn.easyrun.component.common.AbstractPool;
-import org.shirdrn.easyrun.component.common.ConnectionPoolService;
+import org.shirdrn.easyrun.component.common.AbstractConnectionPool;
 
-public final class JDBCConnectionPool extends AbstractPool implements ConnectionPoolService {
+public final class JDBCConnectionPool extends AbstractConnectionPool {
 	
 	private static final Log LOG = LogFactory.getLog(JDBCConnectionPool.class);
 	private final ContextReadable context;
@@ -55,17 +54,6 @@ public final class JDBCConnectionPool extends AbstractPool implements Connection
 
 	@Override
 	public void close() {
-	}
-
-	@Override
-	public void release(Connection connection) {
-		try {
-			if(connection != null && !connection.isClosed()) {
-				connection.close();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}	
 	}
 
 }
