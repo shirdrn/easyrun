@@ -61,6 +61,13 @@
 		</dependency>
 	</dependencies>
 	
+	<repositories>
+		<repository>
+			<id>www.shiyanjun.cn</id>
+			<url>http://pan.baidu.com/s/1xKUdH#dir/path=/maven/repository</url>
+		</repository>
+	</repositories>
+	
 	<build>
 		<pluginManagement>
 			<plugins>
