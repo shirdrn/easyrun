@@ -1,6 +1,5 @@
 package org.shirdrn.easyrun.component.common;
 
-import javax.sql.DataSource;
 
 public class AbstractPool {
 
