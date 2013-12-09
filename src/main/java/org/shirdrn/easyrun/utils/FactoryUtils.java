@@ -14,13 +14,18 @@ import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.common.config.ContextWriteable;
 import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
 
+/**
+ * Utility for managing registered factory instances.
+ * @author Shirdrn
+ */
 public class FactoryUtils {
 
-	private final static Map<String, ObjectFactory<?, ?>> INSTANCES = new HashMap<String, ObjectFactory<?, ?>>(0);
-	private final static Map<Class<?>, Set<String>> CLASSES = new HashMap<Class<?>, Set<String>>(0);
-	private static Lock lock = new ReentrantLock();
+	private static final Map<String, ObjectFactory<?, ?>> INSTANCES = new HashMap<String, ObjectFactory<?, ?>>(0);
+	private static final Map<Class<?>, Set<String>> CLASSES = new HashMap<Class<?>, Set<String>>(0);
+	private static final Lock lock = new ReentrantLock();
 	private static Configuration CONFIGURATION = null;
 	static {
+		// load default configuration: config.properties
 		Class<? extends ContextReadable> contextClass = PropertiesConfiguration.class;
 		if(CONFIGURATION == null) {
 			ContextReadable rContext = ReflectionUtils.getInstance(contextClass, "config.properties");
@@ -30,6 +35,13 @@ public class FactoryUtils {
 		}
 	}
 
+	/**
+	 * Get a instance of class <code>baseClazz</code> 
+	 * from class name <code>className</code>.
+	 * @param className
+	 * @param baseClazz
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T getFactory(String className, Class<T> baseClazz) {
 		register(baseClazz, className);
@@ -60,10 +72,27 @@ public class FactoryUtils {
 		}
 	}
 	
+	/**
+	 * Get default {@link Configuration} object.
+	 * @return
+	 */
 	public static Configuration getDefaultConfiguration() {
 		return CONFIGURATION;
 	}
 	
+	/**
+	 * Close a specified {@link ObjectFactory} instance.
+	 * @param factory
+	 */
+	public static void close(ObjectFactory<?, ?> factory) {
+		if(factory != null) {
+			factory.closeAll();
+		}
+	}
+	
+	/**
+	 * Close all registered instances of {@link ObjectFactory}.
+	 */
 	public static void closeAll() {
 		for(Entry<String, ObjectFactory<?, ?>> factory : INSTANCES.entrySet()) {
 			factory.getValue().closeAll();
