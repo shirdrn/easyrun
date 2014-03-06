@@ -4,6 +4,12 @@ import java.util.List;
 
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
 
+/**
+ * The protocol of the execution result of a 
+ * {@link TaskExecutor} instance.
+ * 
+ * @author Shirdrn
+ */
 public interface ExecutionResult {
 
 	Status getStatus();

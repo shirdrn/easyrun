@@ -10,6 +10,11 @@ import org.shirdrn.easyrun.component.common.AbstractConnectionPool;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+/**
+ * C3P0 connection pool component.
+ * 
+ * @author Shirdrn
+ */
 public class C3P0ConnectionPool extends AbstractConnectionPool {
 
 	private static final Log LOG = LogFactory.getLog(C3P0ConnectionPool.class);

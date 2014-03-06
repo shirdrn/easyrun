@@ -6,6 +6,13 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * Properties configuration implementation. The framework 
+ * <code>easyrun</code> use the {@link PropertiesConfiguration}
+ * as the default configuration implementation.
+ * 
+ * @author Shirdrn
+ */
 public final class PropertiesConfiguration implements ContextReadable, ContextWriteable {
 
 	private static final Log LOG = LogFactory.getLog(PropertiesConfiguration.class);

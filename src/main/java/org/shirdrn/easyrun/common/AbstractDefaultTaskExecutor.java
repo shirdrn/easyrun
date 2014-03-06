@@ -7,7 +7,11 @@ import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.AbstractIterableTaskExecutor.ChildTaskExecutionException;
 import org.shirdrn.easyrun.utils.TimeUtils;
 
-
+/**
+ * Using {@link DefaultExecutionResult} as the returned execution result object.
+ * 
+ * @author Shirdrn
+ */
 public abstract class AbstractDefaultTaskExecutor extends AbstractTaskExecutor<ExecutionResult> {
 	
 	private static final Log LOG = LogFactory.getLog(AbstractDefaultTaskExecutor.class);

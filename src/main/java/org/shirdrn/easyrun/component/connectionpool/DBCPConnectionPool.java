@@ -9,6 +9,11 @@ import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
 import org.shirdrn.easyrun.component.common.AbstractConnectionPool;
 
+/**
+ * DBCP connection pool component.
+ * 
+ * @author Shirdrn
+ */
 public class DBCPConnectionPool extends AbstractConnectionPool {
 
 	private final ContextReadable context;

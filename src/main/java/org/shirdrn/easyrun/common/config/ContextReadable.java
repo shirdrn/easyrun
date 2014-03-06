@@ -1,5 +1,10 @@
 package org.shirdrn.easyrun.common.config;
 
+/**
+ * A Read-only configuration protocol.
+ * 
+ * @author Shirdrn
+ */
 public interface ContextReadable {
 
 	String get(String key);	

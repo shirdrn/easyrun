@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
 
+/**
+ * Default execution result implementation.
+ * 
+ * @author Shirdrn
+ */
 public class DefaultExecutionResult implements ExecutionResult {
 
 	private String name;

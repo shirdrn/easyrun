@@ -16,7 +16,15 @@ import org.shirdrn.easyrun.component.common.ThreadPoolFactory;
 import org.shirdrn.easyrun.component.common.ThreadPoolService;
 import org.shirdrn.easyrun.utils.FactoryUtils;
 
-
+/**
+ * Parallel task executor implementation. A thread pool factory <code>threadPoolFactory</code> 
+ * which contains {@link ThreadPoolService} is built in, and we just need to fetch a 
+ * {@link ThreadPoolService} instance to consume the {@link ChildTaskExecutor} objects.
+ * 
+ * @author Shirdrn
+ *
+ * @param <E>
+ */
 public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTaskExecutor<E> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractParallelTaskExecutor.class);
@@ -213,6 +221,11 @@ public abstract class AbstractParallelTaskExecutor<E> extends AbstractIterableTa
 		}
 	}
 
+	/**
+	 * Internal child task executor used by parallel parent task executor.
+	 * 
+	 * @author Shirdrn
+	 */
 	class Worker extends ChildTaskExecutor implements Callable<ChildTaskExecutionResult> {
 
 		public Worker(E element) {

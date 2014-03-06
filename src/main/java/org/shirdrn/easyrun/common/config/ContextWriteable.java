@@ -1,5 +1,10 @@
 package org.shirdrn.easyrun.common.config;
 
+/**
+ * A writeable configuration protocol.
+ * 
+ * @author Shirdrn
+ */
 public interface ContextWriteable extends ContextReadable {
 
 	void set(String key, String value);	

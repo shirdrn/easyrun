@@ -10,6 +10,11 @@ import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.common.config.PropertiesConfiguration;
 import org.shirdrn.easyrun.component.common.AbstractConnectionPool;
 
+/**
+ * JDBC connection pool component.
+ * 
+ * @author Shirdrn
+ */
 public final class JDBCConnectionPool extends AbstractConnectionPool {
 	
 	private static final Log LOG = LogFactory.getLog(JDBCConnectionPool.class);

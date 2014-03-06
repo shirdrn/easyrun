@@ -9,6 +9,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.shirdrn.easyrun.component.common.ThreadPoolService;
 
+/**
+ * Manageable thread pool based on {@link ThreadPoolExecutor} provided
+ * by JDK.
+ * 
+ * @author Shirdrn
+ */
 public class ManagedThreadPool extends ThreadPoolExecutor implements ThreadPoolService {
 
 	public ManagedThreadPool(int corePoolSize, int maximumPoolSize, 

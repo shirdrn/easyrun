@@ -6,6 +6,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.config.Configuration;
 
+/**
+ * If a task fails to execute, it can be retried according to the configured.
+ * 
+ * @author Shirdrn
+ * 
+ * @param <T> execution result object.
+ */
 public abstract class AbstractTaskExecutor<T> implements TaskExecutor<T> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractTaskExecutor.class);

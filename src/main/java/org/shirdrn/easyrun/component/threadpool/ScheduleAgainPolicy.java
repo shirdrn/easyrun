@@ -6,6 +6,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * If a task is submitted to the thread pool, but there's no chance to
+ * execute the task, we should wait for a moment and submitted it again.
+ * 
+ * @author Shirdrn
+ *
+ */
 public class ScheduleAgainPolicy implements RejectedExecutionHandler {
 
 	private static final Log LOG = LogFactory.getLog(ScheduleAgainPolicy.class);

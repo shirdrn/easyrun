@@ -4,6 +4,11 @@ import org.shirdrn.easyrun.common.ExecutionResult;
 import org.shirdrn.easyrun.common.TaskExecutor;
 import org.shirdrn.easyrun.common.config.DefaultTaskExecutorChainBuilder.TaskExecutorBuilder;
 
+/**
+ * configure and chain multiple {@link TaskExecutor} definitions.
+ * 
+ * @author Shirdrn
+ */
 public interface TaskExecutorChainBuilder extends TaskExecutorConfigurable {
 
 	TaskExecutorChainBuilder chain(Class<? extends TaskExecutor<ExecutionResult>> executorClass);

@@ -5,6 +5,12 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+/**
+ * Connection pool abstraction, which has a {@code dataSource} member,
+ * can obtain a {@link Connection} object from the {@code dataSource}.
+ * 
+ * @author Shirdrn
+ */
 public abstract class AbstractConnectionPool extends AbstractPool implements ConnectionPoolService{
 
 	public AbstractConnectionPool(String config) {

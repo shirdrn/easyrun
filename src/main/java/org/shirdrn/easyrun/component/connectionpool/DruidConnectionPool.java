@@ -9,6 +9,11 @@ import org.shirdrn.easyrun.component.common.AbstractConnectionPool;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 
+/**
+ * Druid connection pool component.
+ * 
+ * @author Shirdrn
+ */
 public class DruidConnectionPool extends AbstractConnectionPool {
 
 	public DruidConnectionPool() {

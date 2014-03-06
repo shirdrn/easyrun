@@ -9,6 +9,17 @@ import org.apache.commons.logging.LogFactory;
 import org.shirdrn.easyrun.common.config.Configuration;
 import org.shirdrn.easyrun.utils.TimeUtils;
 
+/**
+ * Iterable task executor. Usually we may process a collection-like dataset,
+ * such as a file containing multiple lines, a result set of executing a query SQL.
+ * In the main loop, such as reading a file, iterating a collection, we need to 
+ * construct a object based on each datum, and then feed objects to the thread pool.
+ * It's right way to use {{@link #process(Object)} to give the procedure of consuming.
+ * 
+ * @author Shirdrn
+ *
+ * @param <E> a basic datum unit
+ */
 public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTaskExecutor implements Iterable<E> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractIterableTaskExecutor.class);
@@ -64,6 +75,13 @@ public abstract class AbstractIterableTaskExecutor<E> extends AbstractDefaultTas
 	
 	private static final Log COG = LogFactory.getLog(AbstractIterableTaskExecutor.ChildTaskExecutor.class);
 	
+	/**
+	 * It's responsible for processing a element fed by the parent task executor.
+	 * And each {@link ChildTaskExecutor} can be as a separate thread to execute 
+	 * after wrapping and by submitting it to the thread pool. 
+	 * 
+	 * @author Shirdrn
+	 */
 	class ChildTaskExecutor implements TaskExecutor<ChildTaskExecutionResult> {
 		
 		private int id;

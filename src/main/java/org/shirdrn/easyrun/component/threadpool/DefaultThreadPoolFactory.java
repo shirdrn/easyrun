@@ -10,6 +10,12 @@ import org.shirdrn.easyrun.common.config.ContextReadable;
 import org.shirdrn.easyrun.component.common.ThreadPoolFactory;
 import org.shirdrn.easyrun.component.common.ThreadPoolService;
 
+/**
+ * Default tread pool factory implementation, which uses
+ * {@link ManagedThreadPool} as the thread pool product.
+ * 
+ * @author Shirdrn
+ */
 public class DefaultThreadPoolFactory extends ThreadPoolFactory {
 
 	public DefaultThreadPoolFactory() {

@@ -7,6 +7,13 @@ import java.sql.SQLException;
 import org.shirdrn.easyrun.component.database.DBCollection;
 import org.shirdrn.easyrun.component.database.DBResult;
 
+/**
+ * Database engine for manipulating database, including CRUD operations.
+ * Execute a SQL query, we should create a {@link SQLBuilder} object.
+ * 
+ * @author Shirdrn
+ *
+ */
 public interface DBEngine extends Closeable {
 
 	PreparedStatement prepareStatement(String sql) throws SQLException;

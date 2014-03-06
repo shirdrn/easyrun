@@ -10,6 +10,12 @@ import org.shirdrn.easyrun.common.TaskExecutor;
 import org.shirdrn.easyrun.common.TaskExecutor.Status;
 import org.shirdrn.easyrun.utils.ReflectionUtils;
 
+/**
+ * Portable tool for configuring and chaining multiple 
+ * {@link TaskExecutor} definitions.
+ * 
+ * @author Shirdrn
+ */
 public class DefaultTaskExecutorChainBuilder implements TaskExecutorChainBuilder {
 
 	private static final Log LOG = LogFactory.getLog(DefaultTaskExecutorChainBuilder.class);

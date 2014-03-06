@@ -5,6 +5,11 @@ import java.sql.SQLException;
 
 import org.shirdrn.easyrun.common.Resetable;
 
+/**
+ * Builder for setting values for a {@link PreparedStatement} instance.
+ * 
+ * @author Shirdrn
+ */
 public interface SQLBuilder extends Resetable {
 
 	SQLBuilder build(String sql) throws SQLException;
